@@ -150,6 +150,14 @@ export default function IncidenciasFacultad() {
         setDetalleModalVisible(true);
     };
 
+    const actualizarIncidencias = (incidenciaActualizada) => {
+        const updatedData = incidenciasData.map((inc) =>
+            inc.id_incidencia === incidenciaActualizada.id_incidencia ? incidenciaActualizada : inc
+        );
+        setIncidenciasData(updatedData);
+        setFilteredIncidencias(updatedData);
+    };
+
     const handleActualizarIncidencia = async (asunto, mensaje) => {
         const updatedIncidencias = incidenciasData.map((inc) =>
             inc.id_incidencia === incidenciaToEdit.id_incidencia ? { ...inc, asunto, mensaje } : inc
@@ -232,6 +240,7 @@ export default function IncidenciasFacultad() {
                     incidencia={incidenciaDetalle}
                     idfacultad={idfacultad}
                     onClose={() => setDetalleModalVisible(false)}
+                    actualizarIncidencias={actualizarIncidencias} // Pasamos la función al componente DetallesIncidencia
                 />
             )}
         </div>

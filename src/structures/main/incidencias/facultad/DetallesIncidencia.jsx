@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Cookie from 'js-cookie';
 
-export default function DetallesIncidencia({ incidencia, onClose, idfacultad }) {
+export default function DetallesIncidencia({ incidencia, onClose, idfacultad, actualizarIncidencias }) {
     const [mensajeRespuesta, setMensajeRespuesta] = useState('');
     const [respuestas, setRespuestas] = useState(incidencia.respuesta || []);
-
-    useEffect(() => {
-        setRespuestas(incidencia.respuesta || []); // Asegurarse de que las respuestas se actualicen al abrir el modal
-    }, [incidencia]);
 
     const handleSendMessage = async () => {
         if (!mensajeRespuesta) return;
@@ -21,20 +17,33 @@ export default function DetallesIncidencia({ incidencia, onClose, idfacultad }) 
         };
 
         try {
+            // Agregar la nueva respuesta localmente
             const updatedRespuestas = [...respuestas, nuevaRespuesta];
+            setRespuestas(updatedRespuestas);
+            setMensajeRespuesta('');
+
+            // Crear una copia de la incidencia actualizada
             const updatedIncidencia = {
                 ...incidencia,
                 respuesta: updatedRespuestas
             };
 
+            // Obtener todas las incidencias y actualizar solo la seleccionada
+            const response = await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`);
+            const data = await response.json();
+            const updatedIncidencias = data.incidencia.map((inc) =>
+                inc.id_incidencia === incidencia.id_incidencia ? updatedIncidencia : inc
+            );
+
+            // Guardar el cambio en la API
             await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ carrera: incidencia.carrera, incidencia: [updatedIncidencia] })
+                body: JSON.stringify({ carrera: data.carrera, incidencia: updatedIncidencias })
             });
 
-            setRespuestas(updatedRespuestas); // Actualizar el estado de respuestas
-            setMensajeRespuesta(''); // Limpiar el campo de mensaje
+            // Actualizar el estado global de incidencias
+            actualizarIncidencias(updatedIncidencias);
         } catch (error) {
             console.error('Error al enviar el mensaje:', error);
         }
@@ -48,6 +57,9 @@ export default function DetallesIncidencia({ incidencia, onClose, idfacultad }) 
                 <p><strong>Hora:</strong> {incidencia.hora}</p>
                 <p><strong>Asunto:</strong> {incidencia.asunto}</p>
                 <p><strong>Mensaje:</strong> {incidencia.mensaje}</p>
+                <p><strong>Estado de solicitud:</strong> {incidencia.estadoSolicitud}</p>
+                <p><strong>Estado de reparación:</strong> {incidencia.estadoReparacion}</p>
+                <p><strong>Responsable:</strong> {incidencia.responsable}</p>
 
                 <h3 className="text-lg font-semibold mt-4">Chat de Respuestas</h3>
                 <div className="border border-gray-300 rounded p-3 mb-4 h-64 overflow-y-auto">
