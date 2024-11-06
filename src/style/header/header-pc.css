@@ -1,0 +1,73 @@
+.header_navPC {
+  display: none;
+}
+
+.headerMovil {
+  display: block;
+}
+
+@media (max-width: 1000px) {
+  .header_navPC {
+    display: none;
+  }
+  
+  .headerMovil {
+    display: block;
+  }
+}
+
+@media (min-width: 1000px) {
+  .header_navPC {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    background-color: #fff;
+    z-index: 100;
+    position: fixed;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .headerMovil {
+    display: none;
+  }
+
+  .nav_container_logoimg_title {
+    display: flex;
+    align-items: center;
+  }
+
+  .img_logo_unc {
+    height: 100%;
+    width: 40px;
+    padding: 2.5px;
+    cursor: pointer;
+  }
+
+  .nav__title {
+    font-size: 14px;
+    font-weight: 700;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    width: 253px;
+  }
+
+  .ul__nav_header {
+    display: grid;
+    grid-template-columns: repeat(var(--cant_li_header), var(--medida_li));
+    grid-template-rows: repeat(1, 23px);
+  }
+
+  .li__nav_header {
+    width: var(--medida_lipx);
+    color: rgb(0, 0, 0);
+    font-family: Rubik, sans-serif;
+    font-weight: 600;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  .li__nav_header:hover {
+    color: rgb(87, 107, 143);
+  }
+}

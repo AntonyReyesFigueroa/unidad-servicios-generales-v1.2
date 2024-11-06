@@ -1,0 +1,110 @@
+
+
+.encabezado_login_container{
+    height: 140px;
+}
+
+.title_encabezado{
+height: 70px;
+background: linear-gradient(to left, rgb(34, 35, 36) 0%, rgb(11, 65, 122) 100%);
+color: #fff;
+font-size: 20px;
+font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: 900;
+text-align: center;
+}
+
+.espacio_encabezado{
+height: 70px;
+width: 100%;
+background: linear-gradient(to right, rgb(34, 35, 36) 0%, rgb(11, 65, 122) 100%);
+}
+
+.container_login{
+    background-color: rgb(236, 240, 245);
+    height: 100vh;
+}
+
+.login{
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.login_title{
+    color: rgb(51, 51, 51);
+    font-family: "Source Sans Pro", sans-serif;
+    font-size: 24px;
+    font-weight: 900;
+    text-align: center;
+
+}
+
+.login_subtitle{
+    color: rgb(68, 68, 68);
+    font-weight: 700;
+    cursor: pointer;
+    padding: 30px 0px;
+    margin-top: 2em;
+    font-size: 35px;
+    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.login_subtitle:hover{
+    color: #000;
+}
+
+.login_subtitle>span{
+  font-weight: 100;
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: rgb(68, 68, 68);
+}
+
+
+.container_btn_login{
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    width: 350px;
+}
+
+
+.btn_login {
+  display: grid;
+  grid-template-columns: 40px 250px;
+  height: 40px;
+  width: 290px;
+  background-color: #db3f31;
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn_login > img {
+  margin: auto;
+  height: 100%;
+  width: 100%;
+  border: 1px solid #071c30;
+  cursor: pointer;
+  padding: 10%;
+}
+.btn_login > button {
+  text-align: left;
+  color: white;
+  text-decoration: none;
+  padding-left: 15px;
+  border: 1px solid #071c30;
+  height: 100%;
+}
+
+.btn_login:hover {
+  background-color: #cf2e1f;
+}
