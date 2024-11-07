@@ -1,3 +1,5 @@
+// IncidenciasFacultad.jsx
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -145,17 +147,18 @@ export default function IncidenciasFacultad() {
         setModalVisible(true);
     };
 
-    const handleMostrarDetalles = (incidencia) => {
-        setIncidenciaDetalle(incidencia);
-        setDetalleModalVisible(true);
-    };
-
-    const actualizarIncidencias = (incidenciaActualizada) => {
-        const updatedData = incidenciasData.map((inc) =>
-            inc.id_incidencia === incidenciaActualizada.id_incidencia ? incidenciaActualizada : inc
-        );
-        setIncidenciasData(updatedData);
-        setFilteredIncidencias(updatedData);
+    const handleMostrarDetalles = async (incidencia) => {
+        try {
+            // Obtener los datos más recientes de la incidencia seleccionada
+            const response = await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`);
+            const data = await response.json();
+            const incidenciaActualizada = data.incidencia.find((inc) => inc.id_incidencia === incidencia.id_incidencia);
+            setIncidenciaDetalle(incidenciaActualizada);
+            setDetalleModalVisible(true);
+        } catch (error) {
+            console.error("Error al obtener los detalles de la incidencia:", error);
+            Swal.fire('Error', 'No se pudo cargar la incidencia seleccionada', 'error');
+        }
     };
 
     const handleActualizarIncidencia = async (asunto, mensaje) => {
@@ -206,6 +209,15 @@ export default function IncidenciasFacultad() {
         setFilteredIncidencias(filtered);
     };
 
+    const actualizarIncidenciaRespuesta = (incidenciaActualizada) => {
+        const updatedIncidencias = incidenciasData.map(inc =>
+            inc.id_incidencia === incidenciaActualizada.id_incidencia ? incidenciaActualizada : inc
+        );
+        setIncidenciasData(updatedIncidencias);
+        setFilteredIncidencias(updatedIncidencias);
+        setIncidenciaDetalle(incidenciaActualizada);
+    };
+
     if (isLoading) return <div className="text-center p-5">Cargando...</div>;
 
     return (
@@ -240,7 +252,7 @@ export default function IncidenciasFacultad() {
                     incidencia={incidenciaDetalle}
                     idfacultad={idfacultad}
                     onClose={() => setDetalleModalVisible(false)}
-                    actualizarIncidencias={actualizarIncidencias} // Pasamos la función al componente DetallesIncidencia
+                    actualizarIncidencias={actualizarIncidenciaRespuesta}
                 />
             )}
         </div>

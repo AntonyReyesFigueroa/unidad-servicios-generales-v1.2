@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Cookie from 'js-cookie';
 
 export default function DetallesIncidencia({ incidencia, onClose, idfacultad, actualizarIncidencias }) {
     const [mensajeRespuesta, setMensajeRespuesta] = useState('');
     const [respuestas, setRespuestas] = useState(incidencia.respuesta || []);
+    const chatEndRef = useRef(null);
+
+    // Colores para los usuarios, seleccionados con base en hash de nombreUsuario
+    const coloresUsuarios = ['text-blue-900', 'text-green-700', 'text-purple-700', 'text-black-600'];
+
+    const obtenerColorUsuario = (nombreUsuario) => {
+        const hash = Array.from(nombreUsuario).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return coloresUsuarios[hash % coloresUsuarios.length];
+    };
 
     const handleSendMessage = async () => {
         if (!mensajeRespuesta) return;
@@ -17,65 +26,71 @@ export default function DetallesIncidencia({ incidencia, onClose, idfacultad, ac
         };
 
         try {
-            // Agregar la nueva respuesta localmente
             const updatedRespuestas = [...respuestas, nuevaRespuesta];
             setRespuestas(updatedRespuestas);
             setMensajeRespuesta('');
 
-            // Crear una copia de la incidencia actualizada
             const updatedIncidencia = {
                 ...incidencia,
                 respuesta: updatedRespuestas
             };
 
-            // Obtener todas las incidencias y actualizar solo la seleccionada
             const response = await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`);
             const data = await response.json();
             const updatedIncidencias = data.incidencia.map((inc) =>
                 inc.id_incidencia === incidencia.id_incidencia ? updatedIncidencia : inc
             );
 
-            // Guardar el cambio en la API
             await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ carrera: data.carrera, incidencia: updatedIncidencias })
             });
 
-            // Actualizar el estado global de incidencias
-            actualizarIncidencias(updatedIncidencias);
+            actualizarIncidencias(updatedIncidencia);
         } catch (error) {
             console.error('Error al enviar el mensaje:', error);
         }
     };
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full max-h-full overflow-y-auto">
-                <h2 className="text-xl font-bold mb-4">Detalles de Incidencia</h2>
-                <p><strong>Fecha:</strong> {incidencia.fecha}</p>
-                <p><strong>Hora:</strong> {incidencia.hora}</p>
-                <p><strong>Asunto:</strong> {incidencia.asunto}</p>
-                <p><strong>Mensaje:</strong> {incidencia.mensaje}</p>
-                <p><strong>Estado de solicitud:</strong> {incidencia.estadoSolicitud}</p>
-                <p><strong>Estado de reparación:</strong> {incidencia.estadoReparacion}</p>
-                <p><strong>Responsable:</strong> {incidencia.responsable}</p>
+    useEffect(() => {
+        if (chatEndRef.current) {
+            chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [respuestas]);
 
-                <h3 className="text-lg font-semibold mt-4">Chat de Respuestas</h3>
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center overflow-y-auto">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                <h2 className="text-2xl font-bold mb-4">Detalles de Incidencia</h2>
+                <div className="space-y-2">
+                    <p><strong>Fecha:</strong> {incidencia.fecha}</p>
+                    <p><strong>Hora:</strong> {incidencia.hora}</p>
+                    <p><strong>Asunto:</strong> {incidencia.asunto}</p>
+                    <p><strong>Mensaje:</strong> {incidencia.mensaje}</p>
+                    <p><strong>Estado de solicitud:</strong> {incidencia.estadoSolicitud}</p>
+                    <p><strong>Estado de reparación:</strong> {incidencia.estadoReparacion}</p>
+                    <p><strong>Responsable:</strong> {incidencia.responsable}</p>
+                </div>
+
+                <h3 className="text-lg font-semibold mt-6">Chat de Respuestas</h3>
                 <div className="border border-gray-300 rounded p-3 mb-4 h-64 overflow-y-auto">
                     {respuestas.length > 0 ? (
                         respuestas.map((resp) => (
                             <div key={resp.id} className="mb-3">
-                                <p className="text-sm font-bold text-blue-900">{resp.nombreUsuario} ({resp.cargoUsuario}):</p>
+                                <p className={`text-sm font-bold ${obtenerColorUsuario(resp.nombreUsuario)}`}>
+                                    {resp.nombreUsuario} ({resp.cargoUsuario}):
+                                </p>
                                 <p className="text-sm bg-gray-100 p-2 rounded-lg">{resp.mensajeRespuesta}</p>
                             </div>
                         ))
                     ) : (
                         <p className="text-gray-500">No hay respuestas aún.</p>
                     )}
+                    <div ref={chatEndRef}></div>
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center mt-4">
                     <input
                         type="text"
                         placeholder="Escribe tu respuesta..."
