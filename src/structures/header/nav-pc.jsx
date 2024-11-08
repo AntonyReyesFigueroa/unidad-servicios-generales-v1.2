@@ -12,7 +12,7 @@ export const NavPC = () => {
                     main={'/'}
                     subElements={[
                         {
-                            subElement: 'Facultad',
+                            subElement: 'Dependencias',
                             ruta: '/incidencias/facultad',
                         },
                         {
