@@ -54,6 +54,7 @@ export default function IncidenciasFacultad() {
                 .map(emp => ({
                     nombres: emp.nombres,
                     cargo: emp.cargo,
+                    email: emp.email
                 }));
             setEmpleados(filteredEmpleados);
         } catch (error) {

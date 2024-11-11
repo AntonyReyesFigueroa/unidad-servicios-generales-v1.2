@@ -139,7 +139,7 @@ export default function DetallesIncidencia({ incidencia, onClose, carreraId, act
                     }} className="border border-gray-300 rounded w-full py-2 px-4 mb-4">
                         <option value="">Seleccionar responsable</option>
                         {empleados.map((empleado, index) => (
-                            <option key={index} value={`${empleado.nombres} - ${empleado.cargo}`}>
+                            <option key={index} value={`${empleado.nombres} - ${empleado.cargo} - ${empleado.email}`}>
                                 {empleado.nombres} - {empleado.cargo}
                             </option>
                         ))}
