@@ -66,6 +66,24 @@ const Empleados = () => {
     setShowModal(true);
   };
 
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        setShowModal(false);
+        clearForm();
+      }
+    };
+
+    if (showModal) {
+      window.addEventListener('keydown', handleEsc);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [showModal]);
+
+
   // Agregar Empleado
   const handleAddEmpleado = async () => {
     if (!validateNombres(nombres)) {

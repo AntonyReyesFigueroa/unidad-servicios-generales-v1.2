@@ -1,11 +1,77 @@
-'use client'
-import { useState } from 'react';
+'use client';
+import { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BtnCerrarSección } from './cerrar-sesion';
 
 export default function HeaderMovil() {
   const [isOpen, setIsOpen] = useState(false);
+  const [permiso, setPermiso] = useState('');
+
+  // Obtener el valor de la cookie "permiso" con un intervalo para detectar cambios
+  useEffect(() => {
+    const checkRole = () => {
+      const role = Cookies.get('permiso');
+      if (role && role !== permiso) {
+        setPermiso(role);
+      }
+    };
+
+    // Verificar la cookie cada 500ms
+    const interval = setInterval(checkRole, 500);
+
+    // Limpiar el intervalo cuando el componente se desmonte
+    return () => clearInterval(interval);
+  }, [permiso]);
+
+  // Función para renderizar enlaces según el permiso
+  const renderLinks = () => {
+    if (!permiso) {
+      return <p className="text-center">Cargando permisos...</p>;
+    }
+
+    switch (permiso) {
+      case 'Administrador':
+        return (
+          <>
+            <Link href="/incidencias/admi" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+              Incidencias Admi
+            </Link>
+            <Link href="/almacen" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+              Almacén
+            </Link>
+            <Link href="/empleados" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+              Empleados
+            </Link>
+            <Link href="/facultades" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+              Facultades
+            </Link>
+          </>
+        );
+      case 'Operario':
+        return (
+          <Link href="/incidencias/operario" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+            Incidencias Operario
+          </Link>
+        );
+      case 'Archivista':
+        return (
+          <Link href="/incidencias/admi" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+            Incidencias Admi
+          </Link>
+        );
+      case 'escritura':
+      case 'lectura':
+        return (
+          <Link href="/incidencias/facultad" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+            Incidencias Facultad
+          </Link>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className='headerMovil'>
@@ -20,9 +86,7 @@ export default function HeaderMovil() {
             className="mr-3"
           />
           <h3 className="text-lg font-bold text-gray-800 uppercase">
-            <Link href='/'>
-              UNIDAD DE SERVICIOS GENERALES
-            </Link>
+            <Link href='/'>UNIDAD DE SERVICIOS GENERALES</Link>
           </h3>
         </div>
 
@@ -47,26 +111,14 @@ export default function HeaderMovil() {
         </div>
 
         {/* Menú desplegable */}
-        <div className={`${isOpen ? 'block' : 'hidden'} absolute top-16 left-0 w-full bg-white shadow-lg z-50`}>
-          <nav className="flex flex-col items-start p-4">
-            <Link href="/incidencias" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-              Incidencias
-            </Link>
-            <Link href="/almacen" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-              Almacen
-            </Link>
-            <Link href="/empleados" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-               Empleados
-            </Link>
-            {/* <Link href="/empleados/editar" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-              Editar empleados
-            </Link> */}
-            <Link href="/facultades" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-              Facultades
-            </Link>
-            <BtnCerrarSección/>
-          </nav>
-        </div>
+        {isOpen && (
+          <div className="absolute top-16 left-0 w-full bg-white shadow-lg z-50">
+            <nav className="flex flex-col items-start p-4">
+              {renderLinks()}
+              <BtnCerrarSección />
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* Espacio para evitar que el contenido suba debajo del header */}

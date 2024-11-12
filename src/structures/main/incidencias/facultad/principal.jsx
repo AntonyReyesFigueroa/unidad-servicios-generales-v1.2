@@ -1,5 +1,3 @@
-// IncidenciasFacultad.jsx
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -55,6 +53,19 @@ export default function IncidenciasFacultad() {
         }
     };
 
+    // Detectar la tecla 'Esc' para cerrar los modales
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                if (modalVisible) setModalVisible(false);
+                if (detalleModalVisible) setDetalleModalVisible(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [modalVisible, detalleModalVisible]);
+
     const handleAbrirModalAgregar = () => {
         setModalVisible(true);
         setEditMode(false);
@@ -77,79 +88,25 @@ export default function IncidenciasFacultad() {
             respuesta: [],
         };
 
-        if (!idfacultad) {
-            try {
-                const response = await fetch(process.env.NEXT_PUBLIC_INCIDENCIAS, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ carrera: facultad, incidencia: [nuevaIncidencia] }),
-                });
-                const newData = await response.json();
-                Cookie.set('idfacultad', newData.id, { expires: 30 });
-                setIdfacultad(newData.id);
-                Swal.fire('Éxito', 'Nueva carrera y solicitud creadas exitosamente', 'success');
-                fetchIncidencias();
-            } catch (error) {
-                console.error('Error al crear la carrera e incidencia:', error);
-                Swal.fire('Error', 'Hubo un problema al crear la solicitud', 'error');
-            }
-        } else {
-            try {
-                const updatedIncidencias = [...incidenciasData, nuevaIncidencia];
-                await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ carrera: facultad, incidencia: updatedIncidencias }),
-                });
-                Swal.fire('Éxito', 'Solicitud añadida exitosamente', 'success');
-                setIncidenciasData(updatedIncidencias);
-                setFilteredIncidencias(updatedIncidencias);
-            } catch (error) {
-                console.error('Error al agregar la incidencia:', error);
-                Swal.fire('Error', 'Hubo un problema al agregar la solicitud', 'error');
-            }
+        const updatedIncidencias = [...incidenciasData, nuevaIncidencia];
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ carrera: facultad, incidencia: updatedIncidencias }),
+            });
+            setIncidenciasData(updatedIncidencias);
+            setFilteredIncidencias(updatedIncidencias);
+            Swal.fire('Éxito', 'Solicitud añadida exitosamente', 'success');
+        } catch (error) {
+            console.error('Error al agregar la incidencia:', error);
+            Swal.fire('Error', 'Hubo un problema al agregar la solicitud', 'error');
         }
         setModalVisible(false);
     };
 
-    const handleEliminar = async (id_incidencia) => {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "Esta acción no se puede deshacer",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminar'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                const updatedIncidencias = incidenciasData.filter(incidencia => incidencia.id_incidencia !== id_incidencia);
-                try {
-                    await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ carrera: facultad, incidencia: updatedIncidencias }),
-                    });
-                    Swal.fire('Eliminado', 'La incidencia ha sido eliminada', 'success');
-                    setIncidenciasData(updatedIncidencias);
-                    setFilteredIncidencias(updatedIncidencias);
-                } catch (error) {
-                    console.error('Error al eliminar la incidencia:', error);
-                    Swal.fire('Error', 'Hubo un problema al eliminar la solicitud', 'error');
-                }
-            }
-        });
-    };
-
-    const handleEditar = (incidencia) => {
-        setEditMode(true);
-        setIncidenciaToEdit(incidencia);
-        setModalVisible(true);
-    };
-
     const handleMostrarDetalles = async (incidencia) => {
         try {
-            // Obtener los datos más recientes de la incidencia seleccionada
             const response = await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`);
             const data = await response.json();
             const incidenciaActualizada = data.incidencia.find((inc) => inc.id_incidencia === incidencia.id_incidencia);
@@ -159,54 +116,6 @@ export default function IncidenciasFacultad() {
             console.error("Error al obtener los detalles de la incidencia:", error);
             Swal.fire('Error', 'No se pudo cargar la incidencia seleccionada', 'error');
         }
-    };
-
-    const handleActualizarIncidencia = async (asunto, mensaje) => {
-        const updatedIncidencias = incidenciasData.map((inc) =>
-            inc.id_incidencia === incidenciaToEdit.id_incidencia ? { ...inc, asunto, mensaje } : inc
-        );
-
-        try {
-            await fetch(`${process.env.NEXT_PUBLIC_INCIDENCIAS}/${idfacultad}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ carrera: facultad, incidencia: updatedIncidencias }),
-            });
-            Swal.fire('Actualizado', 'La incidencia ha sido actualizada', 'success');
-            setIncidenciasData(updatedIncidencias);
-            setFilteredIncidencias(updatedIncidencias);
-        } catch (error) {
-            console.error('Error al actualizar la incidencia:', error);
-            Swal.fire('Error', 'Hubo un problema al actualizar la solicitud', 'error');
-        }
-
-        setModalVisible(false);
-        setEditMode(false);
-        setIncidenciaToEdit(null);
-    };
-
-    const handleSearch = (query, fechaDesde = '', fechaHasta = '') => {
-        const normalizedQuery = query.toLowerCase();
-        let filtered = incidenciasData;
-
-        if (fechaDesde && fechaHasta) {
-            filtered = filtered.filter(incidencia => {
-                const incidenciaFecha = new Date(incidencia.fecha.split('/').reverse().join('-'));
-                const desde = new Date(fechaDesde);
-                const hasta = new Date(fechaHasta);
-                return incidenciaFecha >= desde && incidenciaFecha <= hasta;
-            });
-        }
-
-        filtered = filtered.filter(incidencia =>
-            incidencia.asunto.toLowerCase().includes(normalizedQuery) ||
-            incidencia.mensaje.toLowerCase().includes(normalizedQuery) ||
-            incidencia.estadoSolicitud.toLowerCase().includes(normalizedQuery) ||
-            incidencia.estadoReparacion.toLowerCase().includes(normalizedQuery) ||
-            incidencia.responsable.toLowerCase().includes(normalizedQuery)
-        );
-
-        setFilteredIncidencias(filtered);
     };
 
     const actualizarIncidenciaRespuesta = (incidenciaActualizada) => {
@@ -231,20 +140,16 @@ export default function IncidenciasFacultad() {
                     Añadir Solicitudes
                 </button>
             )}
-            <BuscadorIncidencias onSearch={handleSearch} />
+            <BuscadorIncidencias onSearch={fetchIncidencias} />
             <IncidenciasTable
                 incidenciasData={filteredIncidencias}
                 permiso={permiso}
-                onEliminar={handleEliminar}
-                onEditar={handleEditar}
                 onMostrarDetalles={handleMostrarDetalles}
             />
             {modalVisible && (
                 <ModalCrearIncidencia
                     onClose={() => setModalVisible(false)}
-                    onSubmit={editMode ? handleActualizarIncidencia : handleAgregarIncidencia}
-                    editMode={editMode}
-                    incidencia={incidenciaToEdit}
+                    onSubmit={handleAgregarIncidencia}
                 />
             )}
             {detalleModalVisible && (

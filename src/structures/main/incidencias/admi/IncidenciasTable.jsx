@@ -1,6 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export default function IncidenciasTable({ incidenciasData, onMostrarDetalles }) {
+
+    // Detectar la tecla 'Esc' para cerrar el modal
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                onMostrarDetalles(null);
+            }
+        };
+
+        // Agregar el listener al documento
+        document.addEventListener('keydown', handleEsc);
+
+        // Limpiar el listener al desmontar
+        return () => {
+            document.removeEventListener('keydown', handleEsc);
+        };
+    }, [onMostrarDetalles]);
+
     return (
         <div className="mt-4">
             <table className="min-w-full bg-white">

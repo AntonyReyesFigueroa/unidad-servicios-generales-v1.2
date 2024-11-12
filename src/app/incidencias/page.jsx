@@ -1,13 +1,12 @@
-'use client'
-import React, { useEffect, useState } from 'react';
-import Cookies from 'js-cookie';
-import { useRouter } from 'next/navigation'; // Usamos useRouter para la redirección
+
+import Header from '@/structures/header/header'
 import IncidenciasInfo from '@/structures/main/incidencias/infor'
 
 export default function Incidencias() {
 
     return (
         <div>
+            <Header />
             <IncidenciasInfo />
         </div>
     );

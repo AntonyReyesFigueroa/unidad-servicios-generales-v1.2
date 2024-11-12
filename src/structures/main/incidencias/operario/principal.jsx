@@ -15,16 +15,30 @@ export default function IncidenciasOperario() {
     const [fechaHasta, setFechaHasta] = useState('');
     const [selectedIncidencia, setSelectedIncidencia] = useState(null);
 
+    // Obtener el valor de la cookie 'correo_auth'
     useEffect(() => {
         const correo = Cookies.get('correo_auth');
         setCorreoAuth(correo);
     }, []);
 
+    // Cargar las incidencias cuando se obtenga el correo
     useEffect(() => {
         if (correoAuth) {
             fetchIncidencias();
         }
     }, [correoAuth]);
+
+    // Detectar la tecla 'Esc' para cerrar el modal
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                handleCloseDetalles();
+            }
+        };
+
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, []);
 
     const fetchIncidencias = async () => {
         try {
@@ -154,7 +168,6 @@ export default function IncidenciasOperario() {
                     incidencia={selectedIncidencia}
                     onClose={handleCloseDetalles}
                     actualizarIncidencias={(updatedIncidencia) => {
-                        // Refrescar la lista de incidencias al recibir una actualización
                         const updatedList = incidenciasData.map(inc =>
                             inc.id_incidencia === updatedIncidencia.id_incidencia ? updatedIncidencia : inc
                         );

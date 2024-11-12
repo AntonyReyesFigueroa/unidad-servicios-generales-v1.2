@@ -203,6 +203,27 @@ const PersonalUNC = () => {
     persona.cargo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Cerrar el modal con la tecla Escape
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        setShowModal(false);
+        clearForm(); // Limpiar el formulario al cerrar el modal
+      }
+    };
+
+    // Añadir el evento al abrir el modal
+    if (showModal) {
+      window.addEventListener('keydown', handleEsc);
+    }
+
+    // Eliminar el evento cuando el modal se cierra o el componente se desmonta
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [showModal]);
+
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <h1 className="text-4xl font-bold mb-8 text-center">Agregar personal de la Universidad Nacional de Cajamarca</h1>
