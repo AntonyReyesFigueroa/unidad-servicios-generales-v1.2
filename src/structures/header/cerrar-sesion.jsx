@@ -21,10 +21,10 @@ export const BtnCerrarSección = () => {
             {
               removeCookie('appSession')
               // removeCookie('user')
-              removeCookie('carreraUniversitaria')
-              removeCookie('correo_auth')
-              removeCookie('facultad')
-              removeCookie('permiso')
+              // removeCookie('carreraUniversitaria')
+              // removeCookie('correo_auth')
+              // removeCookie('facultad')
+              // removeCookie('permiso')
               router.push('/api/auth/logout')
             }
           }

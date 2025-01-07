@@ -11,10 +11,10 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const Empleados = () => {
   const [empleados, setEmpleados] = useState([]);
   const [email, setEmail] = useState('');
-  const [nombres, setNombres] = useState('');
+  const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
   const [dni, setDni] = useState('');
-  const [fechaNacimiento, setFechaNacimiento] = useState('');
+  const [birthday, setFechaNacimiento] = useState('');
   const [cargo, setCargo] = useState('');
   const [permiso, setPermiso] = useState('');
   const [getUrlImage, setGetUrlImage] = useState('https://res.cloudinary.com/dd8snmdx4/image/upload/v1725241226/empleados/fzdhtcnj9aoyawz4nasr.png');
@@ -23,7 +23,7 @@ const Empleados = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentEmpleado, setCurrentEmpleado] = useState(null);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL_EMPLEADO;
+  const apiUrl = '/api/user';
 
   // Fetch Empleados
   const fetchEmpleados = async () => {
@@ -41,23 +41,24 @@ const Empleados = () => {
   }, []);
 
   // Validaciones
-  const validateNombres = (nombres) => /^[A-Za-z\s]+$/.test(nombres) && nombres.length >= 10 && nombres.length <= 70;
+  const validateNombres = (nombre) => /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(nombre) && nombre.length >= 10 && nombre.length <= 70;
+
   const validateDni = (dni) => dni.length === 8 && /^\d+$/.test(dni);
-  const validateTelefono = (telefono) => telefono.length >= 9 && telefono.length <= 12 && /^\d+$/.test(telefono);
-  const validateFechaNacimiento = (fecha) => {
-    const nacimiento = new Date(fecha);
-    const hoy = new Date();
-    const edad = hoy.getFullYear() - nacimiento.getFullYear();
-    return nacimiento <= hoy && edad >= 18 && edad <= 100;
-  };
+  // const validateTelefono = (telefono) => telefono.length >= 9 && telefono.length <= 12 && /^\d+$/.test(telefono);
+  // const validateFechaNacimiento = (fecha) => {
+  //   const nacimiento = new Date(fecha);
+  //   const hoy = new Date();
+  //   const edad = hoy.getFullYear() - nacimiento.getFullYear();
+  //   return nacimiento <= hoy && edad >= 18 && edad <= 100;
+  // };
 
   // Preparar para editar empleado
   const handleEditClick = (empleado) => {
     setEmail(empleado.email);
-    setNombres(empleado.nombres);
+    setNombre(empleado.nombre);
     setTelefono(empleado.telefono);
     setDni(empleado.dni);
-    setFechaNacimiento(empleado.fechaNacimiento);
+    setFechaNacimiento(empleado.birthday);
     setCargo(empleado.cargo);
     setPermiso(empleado.permiso);
     setGetUrlImage(empleado.img);
@@ -86,18 +87,18 @@ const Empleados = () => {
 
   // Agregar Empleado
   const handleAddEmpleado = async () => {
-    if (!validateNombres(nombres)) {
+    if (!validateNombres(nombre)) {
       return Swal.fire('Error', 'El nombre debe tener entre 10 y 70 caracteres y solo contener letras y espacios.', 'error');
     }
     if (!validateDni(dni)) {
       return Swal.fire('Error', 'El DNI debe tener exactamente 8 caracteres numéricos.', 'error');
     }
-    if (!validateTelefono(telefono)) {
-      return Swal.fire('Error', 'El teléfono debe tener entre 9 y 12 caracteres numéricos.', 'error');
-    }
-    if (!validateFechaNacimiento(fechaNacimiento)) {
-      return Swal.fire('Error', 'Fecha de nacimiento inválida. La edad debe estar entre 18 y 100 años.', 'error');
-    }
+    // if (!validateTelefono(telefono)) {
+    //   return Swal.fire('Error', 'El teléfono debe tener entre 9 y 12 caracteres numéricos.', 'error');
+    // }
+    // if (!validateFechaNacimiento(birthday)) {
+    //   return Swal.fire('Error', 'Fecha de nacimiento inválida. La edad debe estar entre 18 y 100 años.', 'error');
+    // }
     if (!emailRegex.test(email)) {
       return Swal.fire('Error', 'Introduce un correo válido.', 'error');
     }
@@ -107,12 +108,13 @@ const Empleados = () => {
 
     const nuevoEmpleado = {
       email,
-      nombres,
+      nombre,
       telefono,
       dni,
-      fechaNacimiento,
+      birthday,
       cargo,
       permiso,
+      pertenencia: 'Unidad de Servicios Generales',
       img: getUrlImage,
     };
 
@@ -131,7 +133,7 @@ const Empleados = () => {
         setShowModal(false);
         clearForm();
       } else {
-        Swal.fire('Error', 'No se pudo agregar al empleado', 'error');
+        Swal.fire('Error', 'El empleado ya existe o los campos ingresados son incorrectos', 'error');
       }
     } catch (error) {
       Swal.fire('Error', 'Error al agregar al empleado', 'error');
@@ -140,18 +142,18 @@ const Empleados = () => {
 
   // Editar Empleado
   const handleEditEmpleado = async () => {
-    if (!validateNombres(nombres)) {
+    if (!validateNombres(nombre)) {
       return Swal.fire('Error', 'El nombre debe tener entre 10 y 70 caracteres y solo contener letras y espacios.', 'error');
     }
     if (!validateDni(dni)) {
       return Swal.fire('Error', 'El DNI debe tener exactamente 8 caracteres numéricos.', 'error');
     }
-    if (!validateTelefono(telefono)) {
-      return Swal.fire('Error', 'El teléfono debe tener entre 9 y 12 caracteres numéricos.', 'error');
-    }
-    if (!validateFechaNacimiento(fechaNacimiento)) {
-      return Swal.fire('Error', 'Fecha de nacimiento inválida. La edad debe estar entre 18 y 100 años.', 'error');
-    }
+    // if (!validateTelefono(telefono)) {
+    //   return Swal.fire('Error', 'El teléfono debe tener entre 9 y 12 caracteres numéricos.', 'error');
+    // }
+    // if (!validateFechaNacimiento(birthday)) {
+    //   return Swal.fire('Error', 'Fecha de nacimiento inválida. La edad debe estar entre 18 y 100 años.', 'error');
+    // }
     if (!emailRegex.test(email)) {
       return Swal.fire('Error', 'Introduce un correo válido.', 'error');
     }
@@ -161,10 +163,10 @@ const Empleados = () => {
 
     const updatedEmpleado = {
       email,
-      nombres,
+      nombre,
       telefono,
       dni,
-      fechaNacimiento,
+      birthday,
       cargo,
       permiso,
       img: getUrlImage || currentEmpleado.img,
@@ -185,7 +187,7 @@ const Empleados = () => {
         setShowModal(false);
         clearForm();
       } else {
-        Swal.fire('Error', 'No se pudo actualizar al empleado', 'error');
+        Swal.fire('Error', 'El empleado ya existe o los campos ingresados son incorrectos', 'error');
       }
     } catch (error) {
       Swal.fire('Error', 'Error al actualizar al empleado', 'error');
@@ -193,9 +195,9 @@ const Empleados = () => {
   };
 
   // Eliminar Empleado
-  const handleDeleteEmpleado = async (id, nombres) => {
+  const handleDeleteEmpleado = async (id, nombre) => {
     const confirm = await Swal.fire({
-      title: `¿Estás seguro de eliminar a ${nombres}?`,
+      title: `¿Estás seguro de eliminar a ${nombre}?`,
       text: 'No podrás revertir esta acción',
       icon: 'warning',
       showCancelButton: true,
@@ -223,7 +225,7 @@ const Empleados = () => {
 
   const clearForm = () => {
     setEmail('');
-    setNombres('');
+    setNombre('');
     setTelefono('');
     setDni('');
     setFechaNacimiento('');
@@ -237,7 +239,7 @@ const Empleados = () => {
   // Filtrado de empleados
   const filteredEmpleados = empleados.filter((empleado) =>
     empleado?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    empleado?.nombres?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    empleado?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     empleado?.cargo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -275,49 +277,52 @@ const Empleados = () => {
       <div className="min-h-20 bg-gray-50">
         <div className="pb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-10">
           {filteredEmpleados.map((empleado) => (
-            <div
-              key={empleado.id}
-              className="bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 ease-in-out max-w-sm mx-auto"
-            >
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-center pb-5">{empleado.nombres}</h3>
-                <div className="flex justify-center items-center mb-5">
-                  <Image
-                    src={empleado.img}
-                    alt={empleado.nombres}
-                    width={200}
-                    height={200}
-                    className="rounded-md object-cover"
-                    style={{ aspectRatio: '1 / 1' }}
-                  />
+            empleado.pertenencia === 'Unidad de Servicios Generales' ?
+              <div
+                key={empleado.id}
+                className="bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 ease-in-out max-w-sm mx-auto"
+              >
+                <div className="mb-4">
+                  <h3 className="text-xl font-semibold text-center pb-5">{empleado.nombre}</h3>
+                  <div className="flex justify-center items-center mb-5">
+                    <Image
+                      src={empleado.img}
+                      alt={empleado.nombre}
+                      width={200}
+                      height={200}
+                      className="rounded-md object-cover"
+                      style={{ aspectRatio: '1 / 1' }}
+                    />
+                  </div>
+                  <p
+                    className="text-blue-500 cursor-pointer hover:underline text-center"
+                    onClick={() => {
+                      navigator.clipboard.writeText(empleado.email);
+                      Swal.fire('Correo copiado', empleado.email, 'success');
+                    }}
+                  >
+                    {empleado.email}
+                  </p>
+                  <p className="text-gray-600 text-center mt-2">Cargo: {empleado.cargo}</p>
+                  <p className="text-gray-600 text-center">Teléfono: {empleado.telefono}</p>
                 </div>
-                <p
-                  className="text-blue-500 cursor-pointer hover:underline text-center"
-                  onClick={() => {
-                    navigator.clipboard.writeText(empleado.email);
-                    Swal.fire('Correo copiado', empleado.email, 'success');
-                  }}
-                >
-                  {empleado.email}
-                </p>
-                <p className="text-gray-600 text-center mt-2">Cargo: {empleado.cargo}</p>
-                <p className="text-gray-600 text-center">Teléfono: {empleado.telefono}</p>
+                <div className="flex justify-center space-x-4 ">
+                  <button
+                    onClick={() => handleEditClick(empleado)}
+                    className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDeleteEmpleado(empleado.id, empleado.nombre)}
+                    className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition duration-300 ease-in-out"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-center space-x-4 ">
-                <button
-                  onClick={() => handleEditClick(empleado)}
-                  className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => handleDeleteEmpleado(empleado.id, empleado.nombres)}
-                  className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition duration-300 ease-in-out"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
+              :
+              ''
           ))}
         </div>
       </div>
@@ -337,8 +342,8 @@ const Empleados = () => {
               <input
                 type="text"
                 placeholder="Nombres y apellidos"
-                value={nombres}
-                onChange={(e) => setNombres(e.target.value)}
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
               />
               <input
@@ -355,7 +360,7 @@ const Empleados = () => {
               <input
                 type="date"
                 placeholder="Fecha de nacimiento"
-                value={fechaNacimiento}
+                value={birthday}
                 onChange={(e) => setFechaNacimiento(e.target.value)}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
               />
@@ -375,16 +380,17 @@ const Empleados = () => {
                 onChange={(e) => setCargo(e.target.value)}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
               >
-                <option value="">Selecciona un cargo</option>
+                <option value="">Seleccionar Cargo</option>
+                <option value="Director general">Director general</option>
+                <option value="Sub director general">Sub director general</option>
                 <option value="Administrador">Administrador</option>
                 <option value="Archivista">Archivista</option>
                 <option value="Gasfitero">Gasfitero</option>
                 <option value="Electricista">Electricista</option>
-                <option value="Soldadura">Soldadura</option>
-                <option value="Carpinteria">Carpintería</option>
-                <option value="Mecanica fina">Mecánica fina</option>
-                <option value="Albañilería">Albañilería</option>
-                <option value="usuario">Usuario</option>
+                <option value="Soldador">Soldador</option>
+                <option value="Carpintero">Carpintero</option>
+                <option value="Técnico en mecánica fina">Técnico en mecánica fina</option>
+                <option value="Albañil">Albañil</option>
               </select>
               <select
                 value={permiso}

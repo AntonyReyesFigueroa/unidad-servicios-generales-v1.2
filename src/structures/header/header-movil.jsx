@@ -10,68 +10,11 @@ export default function HeaderMovil() {
   const [permiso, setPermiso] = useState('');
 
   // Obtener el valor de la cookie "permiso" con un intervalo para detectar cambios
-  useEffect(() => {
-    const checkRole = () => {
-      const role = Cookies.get('permiso');
-      if (role && role !== permiso) {
-        setPermiso(role);
-      }
-    };
 
-    // Verificar la cookie cada 500ms
-    const interval = setInterval(checkRole, 500);
 
-    // Limpiar el intervalo cuando el componente se desmonte
-    return () => clearInterval(interval);
-  }, [permiso]);
 
-  // Función para renderizar enlaces según el permiso
-  const renderLinks = () => {
-    if (!permiso) {
-      return <p className="text-center">Cargando permisos...</p>;
-    }
 
-    switch (permiso) {
-      case 'Administrador':
-        return (
-          <>
-            <Link href="/incidencias/admi" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-              Incidencias Admi
-            </Link>
-            <Link href="/almacen" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-              Almacén
-            </Link>
-            <Link href="/empleados" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-              Empleados
-            </Link>
-            <Link href="/facultades" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-              Facultades
-            </Link>
-          </>
-        );
-      case 'Operario':
-        return (
-          <Link href="/incidencias/operario" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-            Incidencias Operario
-          </Link>
-        );
-      case 'Archivista':
-        return (
-          <Link href="/incidencias/admi" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-            Incidencias Admi
-          </Link>
-        );
-      case 'escritura':
-      case 'lectura':
-        return (
-          <Link href="/incidencias/facultad" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-            Incidencias Facultad
-          </Link>
-        );
-      default:
-        return null;
-    }
-  };
+
 
   return (
     <div className='headerMovil'>
@@ -114,7 +57,20 @@ export default function HeaderMovil() {
         {isOpen && (
           <div className="absolute top-16 left-0 w-full bg-white shadow-lg z-50">
             <nav className="flex flex-col items-start p-4">
-              {renderLinks()}
+              <>
+                <Link href="/incidencias/admi" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+                  Incidencias Admi
+                </Link>
+                <Link href="/almacen" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+                  Almacén
+                </Link>
+                <Link href="/empleados" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+                  Empleados
+                </Link>
+                <Link href="/facultades" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+                  Facultades
+                </Link>
+              </>
               <BtnCerrarSección />
             </nav>
           </div>

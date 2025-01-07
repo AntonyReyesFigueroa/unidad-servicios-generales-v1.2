@@ -5,65 +5,117 @@ import Swal from 'sweetalert2';
 import Image from 'next/image';
 import ComponentSubirImg from '@/components/subir-imagen';
 
+// Expresión regular para validación de email
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const PersonalUNC = () => {
-  const [personas, setPersonas] = useState([]);
+  const [facultades, setFacultades] = useState([]);
   const [email, setEmail] = useState('');
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [facultad, setFacultad] = useState('');
+  const [dni, setDni] = useState('');
+  const [birthday, setFechaNacimiento] = useState('');
   const [cargo, setCargo] = useState('');
-  const [permiso, setPermiso] = useState('');
+  const [pertenencia, setPertenencia] = useState('');
   const [getUrlImage, setGetUrlImage] = useState('https://res.cloudinary.com/dd8snmdx4/image/upload/v1725998380/empleados/qi8foyk50crirjaq7xgf.png');
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentPersona, setCurrentPersona] = useState(null);
+  const [currentEmpleado, setCurrentEmpleado] = useState(null);
 
-  const apiUrl = process.env.NEXT_PUBLIC_FACULTAD;
+  const apiUrl = '/api/user';
 
-  // Fetch Personas
-  const fetchPersonas = async () => {
+  // Fetch Facultades
+  const fetchEmpleados = async () => {
     try {
       const res = await fetch(apiUrl);
       const data = await res.json();
-      setPersonas(data);
+      setFacultades(data);
     } catch (error) {
-      Swal.fire('Error', 'No se pudo obtener los datos del personal de facultad', 'error');
+      Swal.fire('Error', 'No se pudo obtener los datos de los facultades', 'error');
     }
   };
 
   useEffect(() => {
-    fetchPersonas();
+    fetchEmpleados();
   }, []);
 
-  // Agregar Persona
-  const handleAddPersona = async () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Validaciones
+  const validateNombres = (nombre) => /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(nombre) && nombre.length >= 10 && nombre.length <= 70;
 
-    if (!emailRegex.test(email) || email.length < 5 || email.length > 50) {
-      return Swal.fire('Error', 'Introduce un correo válido entre 5 y 50 caracteres', 'error');
-    }
-    if (nombre.length < 10 || nombre.length > 50) {
-      return Swal.fire('Error', 'El nombre debe tener entre 10 y 50 caracteres', 'error');
-    }
-    if (!facultad) {
-      return Swal.fire('Error', 'Debes seleccionar una facultad', 'error');
-    }
-    if (telefono.length < 9 || telefono.length > 12 || isNaN(telefono)) {
-      return Swal.fire('Error', 'El teléfono debe tener entre 9 y 12 dígitos numéricos', 'error');
-    }
-    if (!cargo) {
-      return Swal.fire('Error', 'Debes seleccionar un cargo', 'error');
+  const validateDni = (dni) => dni.length === 8 && /^\d+$/.test(dni);
+  // const validateTelefono = (telefono) => telefono.length >= 9 && telefono.length <= 12 && /^\d+$/.test(telefono);
+  // const validateFechaNacimiento = (fecha) => {
+  //   const nacimiento = new Date(fecha);
+  //   const hoy = new Date();
+  //   const edad = hoy.getFullYear() - nacimiento.getFullYear();
+  //   return nacimiento <= hoy && edad >= 18 && edad <= 100;
+  // };
+
+  // Preparar para editar facultad
+  const handleEditClick = (facultad) => {
+    setEmail(facultad.email);
+    setNombre(facultad.nombre);
+    setTelefono(facultad.telefono);
+    setDni(facultad.dni);
+    setFechaNacimiento(facultad.birthday);
+    setCargo(facultad.cargo);
+    setPertenencia(facultad.pertenencia);
+    setGetUrlImage(facultad.img);
+    setCurrentEmpleado(facultad);
+    setIsEditing(true);
+    setShowModal(true);
+  };
+
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        setShowModal(false);
+        clearForm();
+      }
+    };
+
+    if (showModal) {
+      window.addEventListener('keydown', handleEsc);
     }
 
-    const newPersona = {
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [showModal]);
+
+
+  // Agregar Facultad
+  const handleAddFacultad = async () => {
+    if (!validateNombres(nombre)) {
+      return Swal.fire('Error', 'El nombre debe tener entre 10 y 70 caracteres y solo contener letras y espacios.', 'error');
+    }
+    if (!validateDni(dni)) {
+      return Swal.fire('Error', 'El DNI debe tener exactamente 8 caracteres numéricos.', 'error');
+    }
+    // if (!validateTelefono(telefono)) {
+    //   return Swal.fire('Error', 'El teléfono debe tener entre 9 y 12 caracteres numéricos.', 'error');
+    // }
+    // if (!validateFechaNacimiento(birthday)) {
+    //   return Swal.fire('Error', 'Fecha de nacimiento inválida. La edad debe estar entre 18 y 100 años.', 'error');
+    // }
+    if (!emailRegex.test(email)) {
+      return Swal.fire('Error', 'Introduce un correo válido.', 'error');
+    }
+    if (!cargo || !pertenencia) {
+      return Swal.fire('Error', 'Debes seleccionar un cargo y un pertenencia.', 'error');
+    }
+
+    const nuevoEmpleado = {
       email,
       nombre,
       telefono,
-      facultad,
+      dni,
+      birthday,
       cargo,
-      permiso,
-      img: getUrlImage || 'https://res.cloudinary.com/dd8snmdx4/image/upload/v1725998380/empleados/qi8foyk50crirjaq7xgf.png',
+      permiso: 'Carrera Universitaria',
+      pertenencia,
+      img: getUrlImage,
     };
 
     try {
@@ -72,78 +124,81 @@ const PersonalUNC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newPersona),
+        body: JSON.stringify(nuevoEmpleado),
       });
 
       if (response.ok) {
-        Swal.fire('Personal agregado de facultad', '', 'success');
-        fetchPersonas();
+        Swal.fire('Facultad agregado', '', 'success');
+        fetchEmpleados();
         setShowModal(false);
         clearForm();
       } else {
-        Swal.fire('Error', 'No se pudo agregar al personal de facultad', 'error');
+        Swal.fire('Error', 'El facultad ya existe o los campos ingresados son incorrectos', 'error');
       }
     } catch (error) {
-      Swal.fire('Error', 'Error al agregar al personal de facultad', 'error');
+      Swal.fire('Error', 'Error al agregar al facultad', 'error');
     }
   };
 
-  // Editar Persona
-  const handleEditPersona = async () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Editar Facultad
+  const handleEditFacultad = async () => {
+    if (!validateNombres(nombre)) {
+      return Swal.fire('Error', 'El nombre debe tener entre 10 y 70 caracteres y solo contener letras y espacios.', 'error');
+    }
+    if (!validateDni(dni)) {
+      return Swal.fire('Error', 'El DNI debe tener exactamente 8 caracteres numéricos.', 'error');
+    }
+    // if (!validateTelefono(telefono)) {
+    //   return Swal.fire('Error', 'El teléfono debe tener entre 9 y 12 caracteres numéricos.', 'error');
+    // }
+    // if (!validateFechaNacimiento(birthday)) {
+    //   return Swal.fire('Error', 'Fecha de nacimiento inválida. La edad debe estar entre 18 y 100 años.', 'error');
+    // }
+    if (!emailRegex.test(email)) {
+      return Swal.fire('Error', 'Introduce un correo válido.', 'error');
+    }
+    if (!cargo || !pertenencia) {
+      return Swal.fire('Error', 'Debes seleccionar un cargo y un pertenencia.', 'error');
+    }
 
-    if (!emailRegex.test(email) || email.length < 5 || email.length > 50) {
-      return Swal.fire('Error', 'Introduce un correo válido entre 5 y 50 caracteres', 'error');
-    }
-    if (nombre.length < 10 || nombre.length > 50) {
-      return Swal.fire('Error', 'El nombre debe tener entre 10 y 50 caracteres', 'error');
-    }
-    if (!facultad) {
-      return Swal.fire('Error', 'Debes seleccionar una facultad', 'error');
-    }
-    if (telefono.length < 9 || telefono.length > 12 || isNaN(telefono)) {
-      return Swal.fire('Error', 'El teléfono debe tener entre 9 y 12 dígitos numéricos', 'error');
-    }
-    if (!cargo) {
-      return Swal.fire('Error', 'Debes seleccionar un cargo', 'error');
-    }
-
-    const updatedPersona = {
+    const updatedEmpleado = {
       email,
       nombre,
       telefono,
-      facultad,
+      dni,
+      birthday,
       cargo,
-      permiso,
-      img: getUrlImage || currentPersona.img,
+      pertenencia,
+      permiso: 'Carrera Universitaria',
+      img: getUrlImage || currentEmpleado.img,
     };
 
     try {
-      const response = await fetch(`${apiUrl}/${currentPersona.id}`, {
+      const response = await fetch(`${apiUrl}/${currentEmpleado.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedPersona),
+        body: JSON.stringify(updatedEmpleado),
       });
 
       if (response.ok) {
-        Swal.fire('Personal de facultad actualizado', '', 'success');
-        fetchPersonas();
+        Swal.fire('Facultad actualizado', '', 'success');
+        fetchEmpleados();
         setShowModal(false);
         clearForm();
       } else {
-        Swal.fire('Error', 'No se pudo actualizar al personal de facultad', 'error');
+        Swal.fire('Error', 'El facultad ya existe o los campos ingresados son incorrectos', 'error');
       }
     } catch (error) {
-      Swal.fire('Error', 'Error al actualizar al personal de facultad', 'error');
+      Swal.fire('Error', 'Error al actualizar al facultad', 'error');
     }
   };
 
-  // Eliminar Persona
-  const handleDeletePersona = async (id) => {
+  // Eliminar Facultad
+  const handleDeleteEmpleado = async (id, nombre) => {
     const confirm = await Swal.fire({
-      title: '¿Estás seguro?',
+      title: `¿Estás seguro de eliminar a ${nombre}?`,
       text: 'No podrás revertir esta acción',
       icon: 'warning',
       showCancelButton: true,
@@ -158,82 +213,47 @@ const PersonalUNC = () => {
         });
 
         if (response.ok) {
-          Swal.fire('Personal de facultad eliminado', '', 'success');
-          fetchPersonas();
+          Swal.fire('Facultad eliminado', '', 'success');
+          fetchEmpleados();
         } else {
-          Swal.fire('Error', 'No se pudo eliminar al personal de facultad', 'error');
+          Swal.fire('Error', 'No se pudo eliminar al facultad', 'error');
         }
       } catch (error) {
-        Swal.fire('Error', 'Error al eliminar al personal de facultad', 'error');
+        Swal.fire('Error', 'Error al eliminar al facultad', 'error');
       }
     }
-  };
-
-  // Preparar para editar
-  const handleEditClick = (persona) => {
-    setEmail(persona.email);
-    setNombre(persona.nombre);
-    setTelefono(persona.telefono);
-    setFacultad(persona.facultad);
-    setCargo(persona.cargo);
-    setPermiso(persona.permiso);
-    setGetUrlImage(persona.img);
-    setCurrentPersona(persona);
-    setIsEditing(true);
-    setShowModal(true);
   };
 
   const clearForm = () => {
     setEmail('');
     setNombre('');
     setTelefono('');
-    setFacultad('');
+    setDni('');
+    setFechaNacimiento('');
     setCargo('');
-    setPermiso('');
+    setPertenencia('');
     setGetUrlImage('https://res.cloudinary.com/dd8snmdx4/image/upload/v1725998380/empleados/qi8foyk50crirjaq7xgf.png');
-    setCurrentPersona(null);
+    setCurrentEmpleado(null);
     setIsEditing(false);
   };
 
-  const filteredPersonas = personas.filter((persona) =>
-    persona.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    persona.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    persona.facultad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    persona.permiso.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    persona.cargo.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filtrado de facultades
+  const filteredEmpleados = facultades.filter((facultad) =>
+    facultad?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    facultad?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    facultad?.cargo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  // Cerrar el modal con la tecla Escape
-  useEffect(() => {
-    const handleEsc = (event) => {
-      if (event.key === 'Escape') {
-        setShowModal(false);
-        clearForm(); // Limpiar el formulario al cerrar el modal
-      }
-    };
-
-    // Añadir el evento al abrir el modal
-    if (showModal) {
-      window.addEventListener('keydown', handleEsc);
-    }
-
-    // Eliminar el evento cuando el modal se cierra o el componente se desmonta
-    return () => {
-      window.removeEventListener('keydown', handleEsc);
-    };
-  }, [showModal]);
-
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-4xl font-bold mb-8 text-center">Agregar personal de la Universidad Nacional de Cajamarca</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">Gestión de Facultades</h1>
 
       <div className="flex justify-between items-center mb-6">
         <button
           onClick={() => setShowModal(true)}
           className="bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 transition duration-300 ease-in-out"
         >
-          + Añadir Personal
+          + Añadir usuario de Facultad
         </button>
       </div>
 
@@ -241,7 +261,7 @@ const PersonalUNC = () => {
         <div className="flex">
           <input
             type="text"
-            placeholder="Buscar personal"
+            placeholder="Buscar facultad"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full max-w-xl px-4 py-2 border-2 border-gray-500 rounded-l-lg focus:outline-none focus:border-indigo-500 bg-gray-800 text-white placeholder-gray-400 h-12"
@@ -256,137 +276,155 @@ const PersonalUNC = () => {
       </div>
 
       <div className="min-h-20 bg-gray-50">
-        <div className="pb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-10 bg-cover bg-center" style={{ backgroundImage: "url('/tu-imagen-fondo-elegante.jpg')" }}>
-          {filteredPersonas.map((persona) => (
-            <div
-              key={persona.id}
-              className="bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 ease-in-out max-w-sm mx-auto"
-            >
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold mt-4 text-center pb-5">{persona.facultad}</h3>
-                <div className="flex justify-center items-center mb-5">
-                  <Image
-                    src={persona.img}
-                    alt={persona.nombre}
-                    width={200}
-                    height={200}
-                    className="rounded-md object-cover"
-                    style={{ aspectRatio: '1 / 1' }}
-                  />
+        <div className="pb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-10">
+          {filteredEmpleados.map((facultad) => (
+
+            facultad.pertenencia !== 'Unidad de Servicios Generales' ?
+              <div
+                key={facultad.id}
+                className="bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 ease-in-out max-w-sm mx-auto"
+              >
+                <div className="mb-4">
+                  <h3 className="text-xl font-semibold text-center pb-5">{facultad.nombre}</h3>
+                  <div className="flex justify-center items-center mb-5">
+                    <Image
+                      src={facultad.img}
+                      alt={facultad.nombre}
+                      width={200}
+                      height={200}
+                      className="rounded-md object-cover"
+                      style={{ aspectRatio: '1 / 1' }}
+                    />
+                  </div>
+                  <p
+                    className="text-blue-500 cursor-pointer hover:underline text-center"
+                    onClick={() => {
+                      navigator.clipboard.writeText(facultad.email);
+                      Swal.fire('Correo copiado', facultad.email, 'success');
+                    }}
+                  >
+                    {facultad.email}
+                  </p>
+                  <p className="text-gray-600 text-center mt-2">Cargo: {facultad.cargo}</p>
+                  <p className="text-gray-600 text-center">Teléfono: {facultad.telefono}</p>
                 </div>
-                <p className="text-gray-600 text-justify">Nombre: {persona.nombre} </p>
-                <p className="text-gray-600 text-justify">Cargo: {persona.cargo} </p>
-                <p
-                  className="text-blue-500 cursor-pointer hover:underline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(persona.email);
-                    Swal.fire('Correo copiado', persona.email, 'success');
-                  }}
-                >
-                  {persona.email}
-                </p>
-                <p className="text-gray-600">Teléfono: {persona.telefono}</p>
+                <div className="flex justify-center space-x-4 ">
+                  <button
+                    onClick={() => handleEditClick(facultad)}
+                    className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDeleteEmpleado(facultad.id, facultad.nombre)}
+                    className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition duration-300 ease-in-out"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-center space-x-4 ">
-                <button
-                  onClick={() => handleEditClick(persona)}
-                  className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => handleDeletePersona(persona.id)}
-                  className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition duration-300 ease-in-out"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
+              :
+              ''
+
           ))}
         </div>
       </div>
 
-
-
-
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50 overflow-y-auto transition-opacity duration-300">
           <div className="bg-white rounded-lg p-8 w-full max-w-lg space-y-6 h-auto max-h-screen overflow-y-auto">
-            <h2 className="text-2xl font-bold text-center">{isEditing ? 'Editar Personal' : 'Añadir Personal'}</h2>
+            <h2 className="text-2xl font-bold text-center">{isEditing ? 'Editar Facultad' : 'Añadir Facultad'}</h2>
             <form className="space-y-4">
               <input
                 type="email"
-                placeholder="Email que pertenezca a la UNC"
+                placeholder="Email"
                 value={email}
-                maxLength="50"
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
               />
               <input
                 type="text"
-                placeholder="Ingrese nombres y apellidos"
+                placeholder="Nombres y apellidos"
                 value={nombre}
-                maxLength="50"
-                minLength="10"
                 onChange={(e) => setNombre(e.target.value)}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
               />
-
-              <select
-                value={facultad}
-                onChange={(e) => setFacultad(e.target.value)}
+              <input
+                type="number"
+                placeholder="DNI"
+                value={dni}
+                onChange={(e) => {
+                  if (e.target.value.length <= 8) {
+                    setDni(e.target.value);
+                  }
+                }}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
-              >
-                <option value="">Selecciona una facultad</option>
-                {[
-                  'ADMINISTRACIÓN', 'AGRONOMÍA', 'BIOLOGÍA Y BIOTECNOLOGÍA', 'CONTABILIDAD', 'DERECHO', 'ECONOMÍA',
-                  'EDUCACIÓN', 'ENFERMERÍA', 'INDUSTRIAS ALIMENTARIAS', 'INGENIERÍA AMBIENTAL', 'INGENIERÍA CIVIL',
-                  'INGENIERÍA DE MINAS', 'INGENIERÍA DE SISTEMAS', 'INGENIERÍA EN AGRONEGOCIOS', 'INGENIERÍA FORESTAL',
-                  'INGENIERÍA GEOLÓGICA', 'INGENIERÍA HIDRÁULICA', 'INGENIERÍA SANITARIA', 'INGENIERÍA ZOOTECNISTA',
-                  'MEDICINA HUMANA', 'MEDICINA VETERINARIA', 'OBSTETRICIA', 'SOCIOLOGÍA', 'TURISMO Y HOTELERÍA'
-                ].map((facultad) => (
-                  <option key={facultad} value={facultad}>
-                    {facultad}
-                  </option>
-                ))}
-              </select>
-
+              />
+              <input
+                type="date"
+                placeholder="Fecha de nacimiento"
+                value={birthday}
+                onChange={(e) => setFechaNacimiento(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
+              />
               <input
                 type="number"
                 placeholder="Teléfono"
                 value={telefono}
-                maxLength="12"
-                onChange={(e) => setTelefono(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.length <= 12) {
+                    setTelefono(e.target.value);
+                  }
+                }}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
               />
-
               <select
                 value={cargo}
                 onChange={(e) => setCargo(e.target.value)}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
               >
-                <option value="">Selecciona un cargo</option>
-                <option value="Alumno">Alumno</option>
-                <option value="Docente">Docente</option>
-                <option value="Director">Director</option>
+                <option value="">Seleccionar Cargo</option>
+                <option value="Director(a)">Director(a) </option>
+                <option value="Sub Director(a)">Sub Director(a)</option>
+                <option value="Administración">Administración</option>
               </select>
-
               <select
-                value={permiso}
-                onChange={(e) => setPermiso(e.target.value)}
+                value={pertenencia}
+                onChange={(e) => setPertenencia(e.target.value)}
                 className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
               >
-                <option value="">Permisos</option>
-                <option value="lectura">Lectura</option>
-                <option value="escritura">Escritura</option>
+                <option value="">Selecciona carrera</option>
+                <option value="Administración">Administración</option>
+                <option value="Agronomía">Agronomía</option>
+                <option value="Biología y Biotecnología">Biología y Biotecnología</option>
+                <option value="Contabilidad">Contabilidad</option>
+                <option value="Derecho">Derecho</option>
+                <option value="Economía">Economía</option>
+                <option value="Educación: Cc. Nn, Qq y Biol.">Educación: Cc. Nn, Qq y Biol.</option>
+                <option value="Educación: Ed. Primaria">Educación: Ed. Primaria</option>
+                <option value="Educación: Inglés, Español">Educación: Inglés, Español</option>
+                <option value="Educación: Lenguaje y Literatura">Educación: Lenguaje y Literatura</option>
+                <option value="Educación: Matemática y Física">Educación: Matemática y Física</option>
+                <option value="Enfermería">Enfermería</option>
+                <option value="Ing. Industrias Alimentarias">Ing. Industrias Alimentarias</option>
+                <option value="Ingeniería Civil">Ingeniería Civil</option>
+                <option value="Ingeniería de Minas">Ingeniería de Minas</option>
+                <option value="Ingeniería de Sistemas">Ingeniería de Sistemas</option>
+                <option value="Ingeniería Forestal">Ingeniería Forestal</option>
+                <option value="Ingeniería Geológica">Ingeniería Geológica</option>
+                <option value="Ingeniería Hidráulica">Ingeniería Hidráulica</option>
+                <option value="Ingeniería Zootecnista">Ingeniería Zootecnista</option>
+                <option value="Medicina Humana">Medicina Humana</option>
+                <option value="Medicina Veterinaria">Medicina Veterinaria</option>
+                <option value="Obstetricia">Obstetricia</option>
+                <option value="Sociología">Sociología</option>
+                <option value="Turismo y Hotelería">Turismo y Hotelería</option>
               </select>
-
               <ComponentSubirImg setGetUrlImage={setGetUrlImage} getUrlImage={getUrlImage} />
-
               <div className="flex justify-center space-x-4">
                 <button
                   type="button"
-                  onClick={isEditing ? handleEditPersona : handleAddPersona}
+                  onClick={isEditing ? handleEditFacultad : handleAddFacultad}
                   className="bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 transition duration-300 ease-in-out"
                 >
                   {isEditing ? 'Actualizar' : 'Agregar'}

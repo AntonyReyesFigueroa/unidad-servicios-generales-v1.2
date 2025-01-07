@@ -6,19 +6,39 @@ import Cookies from 'js-cookie';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import "@/style/main/incidencias/incidencias.css";
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 export default function Inicidencias() {
+    const { user, error, isLoading } = useUser();
     const router = useRouter();
     const [carreraSeleccionada, setCarreraSeleccionada] = useState(Cookies.get('carreraUniversitaria') || '');
 
     const carreras = [
-        "ADMINISTRACIÓN", "AGRONOMÍA", "BIOLOGÍA Y BIOTECNOLOGÍA", "CONTABILIDAD",
-        "DERECHO", "ECONOMÍA", "EDUCACIÓN", "ENFERMERÍA",
-        "INDUSTRIAS ALIMENTARIAS", "INGENIERÍA AMBIENTAL", "INGENIERÍA CIVIL",
-        "INGENIERÍA DE MINAS", "INGENIERÍA DE SISTEMAS", "INGENIERÍA EN AGRONEGOCIOS",
-        "INGENIERÍA FORESTAL", "INGENIERÍA GEOLÓGICA", "INGENIERÍA HIDRÁULICA",
-        "INGENIERÍA SANITARIA", "INGENIERÍA ZOOTECNISTA", "MEDICINA HUMANA",
-        "MEDICINA VETERINARIA", "OBSTETRICIA", "SOCIOLOGÍA", "TURISMO Y HOTELERÍA"
+        "Administración",
+        "Agronomía",
+        "Biología y Biotecnología",
+        "Contabilidad",
+        "Derecho",
+        "Economía",
+        "Educación: Cc. Nn, Qq y Biol.",
+        "Educación: Ed. Primaria",
+        "Educación: Inglés, Español",
+        "Educación: Lenguaje y Literatura",
+        "Educación: Matemática y Física",
+        "Enfermería",
+        "Ing. Industrias Alimentarias",
+        "Ingeniería Civil",
+        "Ingeniería de Minas",
+        "Ingeniería de Sistemas",
+        "Ingeniería Forestal",
+        "Ingeniería Geológica",
+        "Ingeniería Hidráulica",
+        "Ingeniería Zootecnista",
+        "Medicina Humana",
+        "Medicina Veterinaria",
+        "Obstetricia",
+        "Sociología",
+        "Turismo y Hotelería"
     ];
 
     const handleSelectChange = (e) => {
@@ -48,7 +68,7 @@ export default function Inicidencias() {
         <div className="">
             {/* Header */}
             <header className="w-full bg-blue-800 text-white py-10 text-center ">
-                <h1 className="text-5xl font-bold text-yellow-500">Sistema de Gestión de Servicios Generales</h1>
+                <h1 className="text-5xl font-bold text-yellow-500">Sistema de Gestión de Servicios Generales </h1>
                 <p className="text-slate-300 text-lg mt-4 max-w-3xl text-justify m-auto">
                     La Unidad de Servicios Generales de la Universidad Nacional de Cajamarca ahora cuenta con este sistema para gestionar eficientemente los requerimientos de mantenimiento.
                 </p>

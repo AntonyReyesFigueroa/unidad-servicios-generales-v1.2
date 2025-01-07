@@ -3,42 +3,42 @@
 import { NextResponse } from "next/server";
 
 export function middleware(request) {
-  const appSession = request.cookies.get("appSession");
+    const appSession = request.cookies.get("appSession");
 
-  const allCookies = request.cookies.getAll();
+    const allCookies = request.cookies.getAll();
 
-  if (request.nextUrl.pathname === "/") {
-    // console.log("Estoy en home");
-    if (appSession) {
-      // console.log('inicie sesion');
-    } else {
-      // console.log('cerre sesion');
-      return NextResponse.redirect(new URL("/login", request.url));
+    if (request.nextUrl.pathname === "/") {
+        // console.log("Estoy en home");
+        if (appSession) {
+            // console.log('inicie sesion');
+        } else {
+            // console.log('cerre sesion');
+            return NextResponse.redirect(new URL("/login", request.url));
+        }
+    } else if (request.nextUrl.pathname === "/login") {
+        // console.log("Estoy en login");
+        if (appSession) {
+            // console.log('inicie sesion');
+            return NextResponse.redirect(new URL("/", request.url));
+        } else {
+            // console.log('cerre sesion');
+        }
+    } else if (request.nextUrl.pathname.includes("/incidencias")) {
+        // console.log("Estoy en home");
+        if (appSession) {
+            // console.log('inicie sesion');
+        } else {
+            // console.log('cerre sesion');
+            return NextResponse.redirect(new URL("/login", request.url));
+        }
     }
-  } else if (request.nextUrl.pathname === "/login") {
-    // console.log("Estoy en login");
-    if (appSession) {
-      // console.log('inicie sesion');
-      return NextResponse.redirect(new URL("/", request.url));
-    } else {
-      // console.log('cerre sesion');
-    }
-  } else if (request.nextUrl.pathname.includes("/incidencias")) {
-    // console.log("Estoy en home");
-    if (appSession) {
-      // console.log('inicie sesion');
-    } else {
-      // console.log('cerre sesion');
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-  }
 
-  return NextResponse.next();
+    return NextResponse.next();
 }
 
 
 export const config = {
-  matcher: ["/", "/login", "/product/:path*"],
+    matcher: ["/", "/login", "/product/:path*"],
 };
 
 // if (request.nextUrl.pathname.includes("/")) {

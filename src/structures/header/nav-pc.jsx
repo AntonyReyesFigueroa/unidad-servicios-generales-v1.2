@@ -22,46 +22,27 @@ export const NavPC = () => {
         return () => clearInterval(interval);
     }, [userRole]);
 
-    if (!userRole) {
-        return <p className="text-center">Cargando permisos...</p>;
-    }
+    // if (!userRole) {
+    //     return <p className="text-center">Cargando permisos...</p>;
+    // }
 
     return (
         <ul className='ul__nav_header'>
-            {userRole === 'Administrador' && (
-                <>
-                    <li className='li__nav_header'>
-                        <Link href="/incidencias/admi">Dependencias</Link>
-                    </li>
-                    <li className='li__nav_header'>
-                        <Link href="/almacen">Almacén</Link>
-                    </li>
-                    <li className='li__nav_header'>
-                        <Link href="/empleados">Empleados</Link>
-                    </li>
-                    <li className='li__nav_header'>
-                        <Link href="/facultades">Facultades</Link>
-                    </li>
-                </>
-            )}
 
-            {userRole === 'Operario' && (
+            <>
                 <li className='li__nav_header'>
-                    <Link href="/incidencias/operario">Dependencias</Link>
+                    <Link href="/dependencias">Dependencias</Link>
                 </li>
-            )}
-
-            {userRole === 'Archivista' && (
                 <li className='li__nav_header'>
-                    <Link href="/incidencias/admi">Dependencias</Link>
+                    <Link href="/almacen">Almacén</Link>
                 </li>
-            )}
-
-            {(userRole === 'escritura' || userRole === 'lectura') && (
                 <li className='li__nav_header'>
-                    <Link href="/incidencias/facultad">Dependencias</Link>
+                    <Link href="/empleados">Empleados</Link>
                 </li>
-            )}
+                <li className='li__nav_header'>
+                    <Link href="/facultades">Facultades</Link>
+                </li>
+            </>
         </ul>
     );
 };

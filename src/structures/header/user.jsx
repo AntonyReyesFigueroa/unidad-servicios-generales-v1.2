@@ -4,13 +4,13 @@ import React from 'react';
 import '@/style/header/user.css';
 import { BtnCerrarSección } from './cerrar-sesion';
 import { useUser } from '@auth0/nextjs-auth0/client';
-import Cookie from 'js-cookie';
+// import Cookie from 'js-cookie';
 
 export default function UserHeader() {
     const { user, error, isLoading } = useUser();
 
     // Obtener el permiso directamente desde la cookie, ya que se establece en HeaderPage
-    const permiso = Cookie.get('permiso');
+    // const permiso = Cookie.get('permiso');
 
     function getFirstName(fullName) {
         return fullName.split(" ")[0];

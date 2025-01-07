@@ -1,156 +1,144 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import Swal from 'sweetalert2';
 
 export default function Incidencias() {
+    const router = useRouter();
     const [incidenciasData, setIncidenciasData] = useState([]);
-    const [filteredIncidencias, setFilteredIncidencias] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [fechaDesde, setFechaDesde] = useState('');
-    const [fechaHasta, setFechaHasta] = useState('');
-    const [carreraUniversitaria, setCarreraUniversitaria] = useState('');
-    const [isClient, setIsClient] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedIncidencia, setSelectedIncidencia] = useState(null);
 
-    // Asegúrate de que el código solo se ejecute en el cliente
     useEffect(() => {
-        setIsClient(true);
         const carrera = Cookies.get('carreraUniversitaria');
         if (carrera) {
-            setCarreraUniversitaria(carrera);
+            fetchIncidencias(carrera);
         }
     }, []);
 
-    // Obtener todas las incidencias de la API y filtrar por la carrera obtenida de la cookie
-    const fetchIncidencias = async () => {
-        if (!carreraUniversitaria) return;
-
+    const fetchIncidencias = async (carreraUniversitaria) => {
+        const apiUrl = `/api/incidencia/pertenencia/${carreraUniversitaria}`;
         try {
-            const response = await fetch(process.env.NEXT_PUBLIC_INCIDENCIAS);
-            if (!response.ok) throw new Error('Error al obtener incidencias');
+            setIsLoading(true);
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) throw new Error('Error al obtener las incidencias');
+
             const data = await response.json();
-
-            const carreraData = data.find(carrera => carrera.carrera === carreraUniversitaria);
-
-            if (carreraData) {
-                setIncidenciasData(carreraData.incidencia);
-                setFilteredIncidencias(carreraData.incidencia);
-            } else {
-                setIncidenciasData([]);
-                setFilteredIncidencias([]);
-            }
+            setIncidenciasData(data);
         } catch (error) {
             console.error('Error:', error);
-            Swal.fire('Error', 'No se pudieron cargar las incidencias', 'error');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    // Ejecutar la función fetchIncidencias solo cuando se obtenga la carrera
+    const closeModal = () => setSelectedIncidencia(null);
+
     useEffect(() => {
-        if (carreraUniversitaria) {
-            fetchIncidencias();
-        }
-    }, [carreraUniversitaria]);
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') closeModal();
+        };
 
-    // Función para buscar en la tabla por los campos especificados
-    const handleSearch = () => {
-        const normalizedQuery = searchQuery.toLowerCase();
-        const fechaInicio = fechaDesde ? new Date(fechaDesde) : null;
-        const fechaFin = fechaHasta ? new Date(fechaHasta) : null;
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
 
-        const filtered = incidenciasData.filter((incidencia) => {
-            const incidenciaFecha = new Date(incidencia.fecha.split('/').reverse().join('-'));
-            const matchesQuery =
-                incidencia.asunto.toLowerCase().includes(normalizedQuery) ||
-                incidencia.estadoSolicitud.toLowerCase().includes(normalizedQuery) ||
-                incidencia.estadoReparacion.toLowerCase().includes(normalizedQuery) ||
-                incidencia.responsable.toLowerCase().includes(normalizedQuery);
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p className="text-xl">Cargando incidencias...</p>
+            </div>
+        );
+    }
 
-            const matchesDateRange =
-                (!fechaInicio || incidenciaFecha >= fechaInicio) &&
-                (!fechaFin || incidenciaFecha <= fechaFin);
-
-            return matchesQuery && matchesDateRange;
-        });
-
-        setFilteredIncidencias(filtered);
-    };
-
-    if (!isClient) return null;
-
-    // Renderizar la tabla solo cuando la cookie esté disponible
     return (
         <div className="container mx-auto p-4">
-            {carreraUniversitaria ? (
-                <>
-                    <h1 className="text-2xl font-semibold mb-4">Incidencias - {carreraUniversitaria}</h1>
+            <h1 className="text-2xl font-semibold mb-4">Incidencias</h1>
 
-                    {/* Buscador */}
-                    <div className="mb-4 flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2">
-                        <input
-                            type="text"
-                            placeholder="Buscar por asunto, estado, responsable..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="border border-gray-300 rounded py-2 px-4 flex-grow"
-                        />
-                        <input
-                            type="date"
-                            value={fechaDesde}
-                            onChange={(e) => setFechaDesde(e.target.value)}
-                            className="border border-gray-300 rounded py-2 px-4"
-                        />
-                        <input
-                            type="date"
-                            value={fechaHasta}
-                            onChange={(e) => setFechaHasta(e.target.value)}
-                            className="border border-gray-300 rounded py-2 px-4"
-                        />
-                        <button
-                            onClick={handleSearch}
-                            className="bg-blue-600 text-white px-4 py-2 rounded"
-                        >
-                            Buscar
-                        </button>
-                    </div>
-
-                    {/* Tabla */}
-                    <table className="min-w-full bg-white border border-gray-300">
-                        <thead>
-                            <tr className="bg-gray-800 text-white">
-                                <th className="py-2 px-4 border">Carrera</th>
-                                <th className="py-2 px-4 border">Asunto</th>
-                                <th className="py-2 px-4 border">Estado de Solicitud</th>
-                                <th className="py-2 px-4 border">Estado de Reparación</th>
-                                <th className="py-2 px-4 border">Responsable</th>
-                                <th className="py-2 px-4 border">Fecha</th>
+            {/* Tabla */}
+            <table className="min-w-full bg-white border border-gray-300 mb-4">
+                <thead>
+                    <tr className="bg-gray-800 text-white">
+                        <th className="py-2 px-4 border">Asunto</th>
+                        <th className="py-2 px-4 border">Estado de Solicitud</th>
+                        <th className="py-2 px-4 border">Estado de Reparación</th>
+                        <th className="py-2 px-4 border">Fecha Inicio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {incidenciasData.length > 0 ? (
+                        incidenciasData.map((incidencia) => (
+                            <tr
+                                key={incidencia.id}
+                                className="hover:bg-gray-100 cursor-pointer"
+                                onClick={() => setSelectedIncidencia(incidencia)}
+                            >
+                                <td className="py-2 px-4 border">{incidencia.asunto}</td>
+                                <td className="py-2 px-4 border">{incidencia.estado_solicitud}</td>
+                                <td className="py-2 px-4 border">{incidencia.estado_reparacion}</td>
+                                <td className="py-2 px-4 border">{incidencia.fecha_inicio}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {filteredIncidencias.length > 0 ? (
-                                filteredIncidencias.map((incidencia) => (
-                                    <tr key={incidencia.id_incidencia} className="hover:bg-gray-100">
-                                        <td className="py-2 px-4 border">{incidencia.carrera}</td>
-                                        <td className="py-2 px-4 border">{incidencia.asunto}</td>
-                                        <td className="py-2 px-4 border">{incidencia.estadoSolicitud}</td>
-                                        <td className="py-2 px-4 border">{incidencia.estadoReparacion}</td>
-                                        <td className="py-2 px-4 border">{incidencia.responsable}</td>
-                                        <td className="py-2 px-4 border">{incidencia.fecha}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={6} className="text-center py-4">
-                                        No se encontraron incidencias
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </>
-            ) : (
-                <p className="text-center py-4">Cargando incidencias...</p>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={4} className="text-center py-4">
+                                No hay incidencias.
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+
+            {/* Botón Atrás */}
+            <div className="flex justify-start">
+                <button
+                    onClick={() => (window.history.length > 1 ? router.back() : router.push('/'))}
+                    className="bg-gray-800 text-white px-4 py-2 rounded"
+                >
+                    Atrás
+                </button>
+            </div>
+
+            {/* Modal */}
+            {selectedIncidencia && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg w-11/12 sm:w-3/4 lg:w-1/2 max-h-[80vh] overflow-y-auto p-6">
+                        {/* Título y Fecha */}
+                        <h2 className="text-2xl font-bold mb-2">{selectedIncidencia.asunto}</h2>
+                        <p className="text-sm text-gray-500 mb-4">{selectedIncidencia.fecha_inicio}</p>
+
+                        {/* Mensaje */}
+                        <div className="mb-6 border border-gray-300 rounded p-4 text-justify">
+                            {selectedIncidencia.mensaje || 'Sin mensaje adicional'}
+                        </div>
+
+                        {/* Firma */}
+                        <p className="font-semibold mt-4">Atentamente,</p>
+                        <p>{selectedIncidencia.usuario.nombre}</p>
+                        <p className="text-sm text-gray-500">{selectedIncidencia.usuario.cargo}</p>
+
+                        {/* Estados */}
+                        <p className="mt-6 text-justify">
+                            Su solicitud actualmente está en el estado de{' '}
+                            <strong>{selectedIncidencia.estado_solicitud}</strong>. El estado de reparación se encuentra
+                            en <strong>{selectedIncidencia.estado_reparacion}</strong>.
+                        </p>
+
+                        {/* Botón Cerrar */}
+                        <div className="mt-6 text-right">
+                            <button
+                                onClick={closeModal}
+                                className="bg-red-500 text-white px-4 py-2 rounded"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
