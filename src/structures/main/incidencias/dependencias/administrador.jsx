@@ -26,7 +26,7 @@ export default function Administrador({ userData, url }) {
             }
         };
 
-        if (url) {
+        if (url && userData) {
             fetchIncidencias();
         }
     }, [url, isCambios]); // Ejecutar el efecto cuando cambie la URL
