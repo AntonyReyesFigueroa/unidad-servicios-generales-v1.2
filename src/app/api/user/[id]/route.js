@@ -45,6 +45,8 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function PUT(request, { params }) {
     const { id } = params;
 
+
+
     try {
         // Verificar si el ID es válido
         if (!id) {
@@ -64,6 +66,7 @@ export async function PUT(request, { params }) {
                 { status: 400 }
             );
         }
+
 
         // Validar que el correo no esté vacío si se envía
         if (body.email) {
