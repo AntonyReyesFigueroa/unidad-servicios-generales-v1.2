@@ -33,11 +33,10 @@ export default function Administrador({ userData, url }) {
 
     return (
         <div>
-            <h1>Incidencias - {userData.pertenencia} </h1> //este es el titulo
+            <h1>Incidencias - {userData.pertenencia} </h1> {/* este es el titulo */}
             <CrearIncidencia setIsCambios={setIsCambios} isCambios={isCambios} userData={userData} />
             <h2>Tabla de incidencias</h2>
             <TablaIncidencias setIsCambios={setIsCambios} isCambios={isCambios} userData={userData} incidencias={incidencias} />
-
         </div>
     );
 }
