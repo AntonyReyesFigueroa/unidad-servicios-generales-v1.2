@@ -29,7 +29,8 @@
     "react-easy-crop": "^5.0.8",
     "react-icons": "^5.4.0",
     "sweetalert2": "^11.14.0",
-    "sweetalert2-react-content": "^5.0.7"
+    "sweetalert2-react-content": "^5.1.0",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "eslint": "^8",

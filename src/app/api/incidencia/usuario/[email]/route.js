@@ -77,7 +77,8 @@ export async function POST(request, { params }) {
             fecha_terminado: null,
             usuario,
             responsable: {},
-            id_incidencia_material: [],
+            id_incidencia_material: "",
+            id_incidencia_chat: ""
         };
 
         const updatedIncidencias = [...incidencias, nuevaIncidencia];

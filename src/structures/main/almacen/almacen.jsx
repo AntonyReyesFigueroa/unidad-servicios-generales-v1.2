@@ -1,335 +1,347 @@
 'use client'
+import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
-import { useState, useEffect } from 'react';
-import Swal from 'sweetalert2';
-import Image from 'next/image';
-import ComponentSubirImg from '@/components/subir-imagen';
-
-const Inventario = () => {
+export default function Inventario() {
   const [productos, setProductos] = useState([]);
-  const [nombre, setNombre] = useState('');
-  const [categoria, setCategoria] = useState('');
-  const [cantidad, setCantidad] = useState('');
-  const [getUrlImage, setGetUrlImage] = useState("https://res.cloudinary.com/dd8snmdx4/image/upload/v1725910428/empleados/pgn6frd1zzwig3ovyrsc.png");
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(null);
+  const [search, setSearch] = useState("");
+  const [categoriaFilter, setCategoriaFilter] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchProductos = async () => {
-    const res = await fetch(process.env.NEXT_PUBLIC_INVENTARIO);
-    const data = await res.json();
-    setProductos(data);
+    try {
+      const response = await fetch("/api/almacen");
+      const data = await response.json();
+      setProductos(data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
   };
-
   useEffect(() => {
+
     fetchProductos();
   }, []);
 
-  const handleAddProduct = async () => {
-    if (nombre.length < 3 || nombre.length > 50) {
-      return Swal.fire('Error', 'El nombre debe tener entre 3 y 50 caracteres', 'error');
-    }
-    if (!categoria) {
-      return Swal.fire('Error', 'Debes seleccionar una categoría', 'error');
-    }
-    if (cantidad.length === 0 || parseInt(cantidad) > 9999999) {
-      return Swal.fire('Error', 'La cantidad debe ser un número de hasta 7 dígitos', 'error');
-    }
-
-    const newProduct = {
-      nombre,
-      categoria,
-      cantidad,
-      img: getUrlImage || "https://res.cloudinary.com/dd8snmdx4/image/upload/v1725910428/empleados/pgn6frd1zzwig3ovyrsc.png",
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setIsModalOpen(false);; // Cierra el modal al presionar ESC
+      }
     };
 
-    const response = await fetch(process.env.NEXT_PUBLIC_INVENTARIO, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newProduct),
-    });
+    window.addEventListener("keydown", handleKeyDown);
 
-    if (response.ok) {
-      Swal.fire('Producto agregado', '', 'success');
-      fetchProductos();
-      setShowModal(false);
-      clearForm();
-    } else {
-      Swal.fire('Error', 'No se pudo agregar el producto', 'error');
-    }
-  };
-
-  const handleEditProduct = async () => {
-    if (nombre.length < 3 || nombre.length > 50) {
-      return Swal.fire('Error', 'El nombre debe tener entre 3 y 50 caracteres', 'error');
-    }
-    if (!categoria) {
-      return Swal.fire('Error', 'Debes seleccionar una categoría', 'error');
-    }
-    if (cantidad.length === 0 || parseInt(cantidad) > 9999999) {
-      return Swal.fire('Error', 'La cantidad debe ser un número de hasta 7 dígitos', 'error');
-    }
-
-    const updatedProduct = {
-      nombre,
-      categoria,
-      cantidad,
-      img: getUrlImage || currentProduct.img,
+    // Limpia el evento cuando el componente se desmonte
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
     };
+  }, [isModalOpen]);
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_INVENTARIO}/${currentProduct.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updatedProduct),
-    });
+  // Handle add or edit product
+  const handleSaveProduct = async (producto) => {
+    const url = editingProduct
+      ? `/api/almacen/${editingProduct.id}`
+      : "/api/almacen";
+    const method = editingProduct ? "PATCH" : "POST";
 
-    if (response.ok) {
-      Swal.fire('Producto actualizado', '', 'success');
-      fetchProductos();
-      setShowModal(false);
-      clearForm();
-    } else {
-      Swal.fire('Error', 'No se pudo actualizar el producto', 'error');
-    }
-  };
-
-  const clearForm = () => {
-    setNombre('');
-    setCategoria('');
-    setCantidad('');
-    setGetUrlImage("https://res.cloudinary.com/dd8snmdx4/image/upload/v1725910428/empleados/pgn6frd1zzwig3ovyrsc.png");
-    setCurrentProduct(null);
-    setIsEditing(false);
-  };
-
-  const handleDeleteProduct = async (id) => {
-    const confirm = await Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'No podrás revertir esta acción',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-    });
-
-    if (confirm.isConfirmed) {
-      await fetch(`${process.env.NEXT_PUBLIC_INVENTARIO}/${id}`, {
-        method: 'DELETE',
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(producto),
       });
-      Swal.fire('Producto eliminado', '', 'success');
-      fetchProductos();
+
+      if (!response.ok) {
+        throw new Error("Error saving product");
+      }
+
+      const result = await response.json();
+
+      if (editingProduct) {
+        // Actualizar producto existente
+        setProductos(
+          productos.map((p) =>
+            p.id === editingProduct.id ? { ...p, ...producto } : p
+          )
+        );
+      } else {
+        // Agregar nuevo producto
+        setProductos([...productos, result]);
+        fetchProductos()
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: editingProduct ? "Producto actualizado" : "Producto creado",
+        text: "El producto ha sido procesado correctamente.",
+      });
+
+      setIsModalOpen(false);
+      setEditingProduct(null);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo procesar el producto.",
+      });
     }
   };
 
-  const handleEditClick = (product) => {
-    setNombre(product.nombre);
-    setCategoria(product.categoria);
-    setCantidad(product.cantidad);
-    setGetUrlImage(product.img);
-    setCurrentProduct(product);
-    setIsEditing(true);
-    setShowModal(true);
+
+  // Handle delete product
+  const handleDeleteProduct = async (id) => {
+    try {
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "No podrás deshacer esta acción.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+      });
+
+      if (result.isConfirmed) {
+        await fetch(`/api/almacen/${id}`, { method: "DELETE" });
+        setProductos(productos.filter((producto) => producto.id !== id));
+
+        Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          text: "El producto fue eliminado correctamente.",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo eliminar el producto.",
+      });
+    }
   };
 
-  const filteredProducts = productos.filter(product =>
-    product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.cantidad.includes(searchTerm)
+  // Filtered products
+
+  const filteredProductos = productos.filter(
+    (producto) =>
+      producto.nombre?.toLowerCase().includes(search.toLowerCase()) &&
+      (!categoriaFilter || producto.categoria === categoriaFilter)
   );
+
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-4xl font-bold mb-8 text-center">Inventario de Servicios Generales UNC</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Inventario de Almacén</h1>
 
-      <div className="flex justify-between items-center mb-6">
+      {/* Search and Filter */}
+      <div className="flex space-x-4 mb-6">
+        <input
+          type="text"
+          className="px-4 py-2 border border-gray-300 rounded-lg w-1/3 focus:ring-2 focus:ring-blue-500"
+          placeholder="Buscar por nombre"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select
+          className="px-4 py-2 border border-gray-300 rounded-lg w-1/3 focus:ring-2 focus:ring-blue-500"
+          value={categoriaFilter}
+          onChange={(e) => setCategoriaFilter(e.target.value)}
+        >
+          <option value="">Todas las categorías</option>
+          <option value="Gasfitero">Gasfitero</option>
+          <option value="Electricista">Electricista</option>
+          <option value="Soldadura">Soldadura</option>
+          <option value="Carpintería">Carpintería</option>
+          <option value="Mecanica fina">Mecánica fina</option>
+          <option value="Albañilería">Albañilería</option>
+        </select>
+
         <button
-          onClick={() => setShowModal(true)}
-          className="bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 transition duration-300 ease-in-out">
-          + Añadir Producto
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center space-x-2 hover:bg-blue-700"
+          onClick={() => {
+            setEditingProduct(null);
+            setIsModalOpen(true);
+          }}
+        >
+          <FaPlus /> <span>Agregar Producto</span>
         </button>
       </div>
 
-      <div className="relative flex justify-center my-4 mb-10">
-        <div className="flex">
-          <input
-            type="text"
-            placeholder="Buscar producto"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full max-w-xl px-4 py-2 border-2 border-gray-500 rounded-l-lg focus:outline-none focus:border-indigo-500 bg-gray-800 text-white placeholder-gray-400 h-12"
-          />
-          <button className="bg-indigo-500 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-600 transition duration-300 ease-in-out h-12 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19a8 8 0 100-16 8 8 0 000 16z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35" />
-            </svg>
-          </button>
-        </div>
+      {/* Product Table */}
+      <div className="overflow-auto rounded-lg shadow-lg">
+        <table className="min-w-full bg-white">
+          <thead>
+            <tr>
+              <th className="px-4 py-2">Nombre</th>
+              <th className="px-4 py-2">Categoría</th>
+              <th className="px-4 py-2">Stock</th>
+              <th className="px-4 py-2">Precio Unidad</th>
+              <th className="px-4 py-2">Orden de Pedido</th>
+              <th className="px-4 py-2">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProductos.map((producto) => (
+              <tr key={producto.id} className="border-b">
+                <td className="px-4 py-2">{producto.nombre}</td>
+                <td className="px-4 py-2">{producto.categoria}</td>
+                <td className="px-4 py-2">{producto.stock}</td>
+                <td className="px-4 py-2">s/ {producto.precio_unidad}</td>
+                <td className="px-4 py-2">{producto.orden_pedido}</td>
+                <td className="px-4 py-2 flex space-x-4">
+                  <button
+                    className="text-blue-600 hover:text-blue-800"
+                    onClick={() => {
+                      setEditingProduct(producto);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    className="text-red-600 hover:text-red-800"
+                    onClick={() => handleDeleteProduct(producto.id)}
+                  >
+                    <FaTrash />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <br />
+      {/* Loading Spinner */}
+      {loading && <div className="text-center py-4">Cargando productos...</div>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map(product => (
-          <div key={product.id} className="bg-white shadow-lg rounded-lg p-4 flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 ease-in-out ">
-            <div className="mb-4">
-              <h3 className="text-xl font-semibold mt-4 text-center">{product.nombre}</h3>
-              <div className="flex justify-center items-center">
-                <Image
-                  src={product.img}
-                  alt={product.nombre}
-                  width={200} // Tamaño reducido de ancho
-                  height={200} // Tamaño reducido de alto
-                  className="rounded-md object-cover"
-                  style={{ aspectRatio: '1 / 1' }}
-                />
-              </div>
-
-
-
-              <p className="text-gray-600">{product.categoria}</p>
-              <p className="text-gray-600">Cantidad: {product.cantidad}</p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => handleEditClick(product)}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out">
-                Editar
-              </button>
-              <button
-                onClick={() => handleDeleteProduct(product.id)}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 ease-in-out">
-                Eliminar
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg p-8 w-full max-w-lg space-y-6 h-auto max-h-screen overflow-y-auto">
-            <h2 className="text-2xl font-bold text-center">{isEditing ? 'Editar Producto' : 'Añadir Producto'}</h2>
-            <form className="space-y-4">
-              <input
-                type="text"
-                placeholder="Nombre"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
-              />
-              <select
-                value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500">
-                <option value="">Selecciona una categoría</option>
-                <option value="Gasfiteria">Gasfiteria</option>
-                <option value="Electricidad">Electricidad</option>
-                <option value="Carpinteria">Carpinteria</option>
-                <option value="Mecanica fina">Mecanica fina</option>
-                <option value="Albañilería">Albañilería</option>
-              </select>
-
-              <input
-                type="number"
-                placeholder="Cantidad"
-                value={cantidad}
-                onChange={(e) => setCantidad(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-500 rounded-lg focus:outline-none focus:border-indigo-500"
-              />
-
-              <ComponentSubirImg
-                setGetUrlImage={setGetUrlImage}
-                getUrlImage={getUrlImage}
-              />
-
-              <div className="flex justify-center space-x-4">
-                <button
-                  type="button"
-                  onClick={isEditing ? handleEditProduct : handleAddProduct}
-                  className="bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-600 transition duration-300 ease-in-out">
-                  {isEditing ? 'Actualizar' : 'Agregar'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowModal(false); clearForm(); }}
-                  className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-300 ease-in-out">
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Modal */}
+      {isModalOpen && (
+        <ProductModal
+          producto={editingProduct}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveProduct}
+        />
       )}
-
-
     </div>
   );
-};
+}
 
-export default Inventario;
+function ProductModal({ producto, onClose, onSave }) {
+  const [nombre, setNombre] = useState(producto?.nombre || "");
+  const [categoria, setCategoria] = useState(producto?.categoria || "");
+  const [stock, setStock] = useState(producto?.stock || "");
+  const [precio_unidad, setPrecioUnidad] = useState(producto?.precio_unidad || "");
+  const [orden_pedido, setOrdenPedido] = useState(producto?.orden_pedido || "");
 
+  const isValid = () =>
+    nombre.length >= 3 &&
+    categoria &&
+    stock > 0 &&
+    precio_unidad > 0 &&
+    orden_pedido;
 
+  const handleSave = () => {
+    if (!isValid()) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Por favor llena todos los campos correctamente.",
+      });
+      return;
+    }
 
+    onSave({
+      nombre,
+      categoria,
+      stock: parseInt(stock, 10),
+      precio_unidad: parseFloat(precio_unidad),
+      orden_pedido,
+    });
+  };
 
-/*
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg">
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">
+            {producto ? "Editar Producto" : "Agregar Producto"}
+          </h2>
 
-Crea una interfaz bonita con los estilos tailwind CSS que cumpla con las siguientes instrucciones : 
+          <form>
+            <label className="block mb-2 font-medium">Nombre</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 mb-4"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+            />
 
-1. Comenzará con un titulo con letra grande y llamativo que dira "Inventario de servios generales UNC", ten en cuenta la caligrafia que este bien escrito.
+            <label className="block mb-2 font-medium">Categoría</label>
+            <select
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 mb-4"
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+            >
+              <option value="">Selecciona una categoría</option>
+              <option value="Gasfitero">Gasfitero</option>
+              <option value="Electricista">Electricista</option>
+              <option value="Soldadura">Soldadura</option>
+              <option value="Carpintería">Carpintería</option>
+              <option value="Mecanica fina">Mecánica fina</option>
+              <option value="Albañilería">Albañilería</option>
+            </select>
 
-2. Luego del titulo que se menciono anteriormente mas abajo tendra un boton que diga añadir producto, este al dar click se abrira un modal que es resposive tanto para pc como para movil, se llenarán los siguientes campos : 
- - nombre
- - categoria
- - cantidad
- - img (Para este usa el siguiente componente  <ComponentSubirImg setGetUrlImage={setGetUrlImage} getUrlImage={getUrlImage} />, lo importas de la siguiente manera "import ComponentSubirImg from '@/components/subir-imagen';" el cual ese campo ese campo tiene que ser manejado por un usesate). Para esto usa Image que es usando por Next.js
- Debe tener boton de agregar y cancelar, que salga una advertencia diciendo producto creado con exito. La imagen debe inicar con esta imagen por defecto "https://res.cloudinary.com/dd8snmdx4/image/upload/v1725910428/empleados/pgn6frd1zzwig3ovyrsc.png" Si es que no se agrega ninguna imagen igualemente se debera crear el producto con esa imagen. La iamgen deberá ser cuadrada.
- 
- ¡Todos esos campos tendrán condiciones estrictas para poder enviar los datos caso contrario no se enviaran los datos, utiliza para eso "import Swal from 'sweetalert2'"
+            <label className="block mb-2 font-medium">Stock</label>
+            <input
+              type="number"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 mb-4"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+            />
 
- -Todos esos datos se guardarán en una variable de entorno .env el cual es el siguiente : NEXT_PUBLIC_INVENTARIO= 'https://66ca95fa59f4350f064f7413.mockapi.io/inventario', esa api por medio de una función fetch con el método POST se subirán los datos.
+            <label className="block mb-2 font-medium">Precio Unidad</label>
+            <input
+              type="number"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 mb-4"
+              value={precio_unidad}
+              onChange={(e) => setPrecioUnidad(e.target.value)}
+            />
 
- condiciones para los campos
-  - nombre : tiene que tener minimo 3 letras, pero no mas de 50 letras
- - categoria: tiene que ser select, que aparesca las lista desplegable con : Gasfiteria, Electricidad, Soldadura, Carpinteria, Mecanica fina, Albañilería
- - cantidad; solo debe permitir ingresar número, pero que no permita ingresar un número de mas de 7 digitos
+            <label className="block mb-2 font-medium">Orden de Pedido</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 mb-4"
+              value={orden_pedido}
+              onChange={(e) => setOrdenPedido(e.target.value)}
+            />
 
- Luego de enviar los datos el modal se tiene que cerrar solo.
-
- 3. Luego del boton para agregar productos que mencione anteriormente, mas abajo debe aparecer un buscador con estilos bonitos, debe ser un input (placeholder: 'Buscar producto') con un icono a su lado que se vea muy elegante. que cumpla las siguientes funciones:
-
-- Que al no escribir nada en el buscador se vea una lista de cards con función map y en cada card se vea la foto del prodcuto, el nombre, categoria y cantidad. Asimimo tendra iconos el cual a dar click editarán y eliminarán , todo ese card tiene que estar responsive. 
-
- - El eliminar, y editar teine que ser por id, utiliza de igual manera la varaible de entorno que tiene un link de acceso a su api el cual es " NEXT_PUBLIC_INVENTARIO= 'https://66ca95fa59f4350f064f7413.mockapi.io/inventario'"
-
- - En eL buscador se podra mostrar un producto con tal solo escribri un letra de su nombre, saldran todos los productos relacionados, por los siguientes campos, nombre, categoria, cantidad. El buscador no olvidar que tendra a su lado una lupita que será extraido de. El buscador tendta estilos algo asi :  "    <input
-          type="text"
-          placeholder="Ingrese nombre, DNI, cargo o permiso"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="w-full max-w-lg px-4 py-2 border-2 border-gray-500 rounded-l-lg focus:outline-none focus:border-indigo-500 bg-gray-800 text-white placeholder-gray-400 h-12"
-        />
-        <button
-          type="submit"
-          className="bg-indigo-500 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-600 transition duration-300 ease-in-out h-12 flex items-center justify-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19a8 8 0 100-16 8 8 0 000 16z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35" />
-          </svg>
-        </button>
-      </form>"
-
- - En editar que mencione anteriormente, y eliminar lo harás con funciones fetch., el eliminar tiene que tener una opción que diga estas seguro de eliminar producto.
-
- El editar debe abrir el mismo modal que mencione anteriormente con el unico cambio que ahora no dirá crear producto, si no el formulario modal dira editar producto, donde este dormulario estará lleno con los campos por el card que se selcciono, y en lugar de tener un boton que diga crear producto diga guardar cambios y se cierre el modal al finalizar
-
-- oJO algo muy importante, cada cambio que se haga tiene que actualizarse los datos, puedes usar useeefect para eso. Osea cada cambio que se haga se debe ver automaticamente en la lsita de cards. 
-
-
-*/
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                onClick={onClose}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                onClick={handleSave}
+              >
+                Guardar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

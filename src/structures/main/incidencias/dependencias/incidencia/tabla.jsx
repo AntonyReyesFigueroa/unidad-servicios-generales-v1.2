@@ -1,24 +1,27 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from "react";
-import { FaSearch, FaEdit, FaTrash } from "react-icons/fa";
+import { FaSearch, FaEdit, FaTrash, FaRegFilePdf, FaCommentDots, FaHammer } from "react-icons/fa";
 import Swal from "sweetalert2";
 import EditarIncidencia from "./editar";
-import DetalleIncidencia from "./detalle";
+import PDF from "./pdf";
+import Chat from "./chat";
+import Materiales from "./materiales";
 
 export default function TablaIncidencias({ isCambios, setIsCambios, userData, incidencias: incidenciasProp }) {
     const [busqueda, setBusqueda] = useState("");
     const [incidenciaEditar, setIncidenciaEditar] = useState(null);
     const [incidenciaDetalle, setIncidenciaDetalle] = useState(null);
-    const [incidencias, setIncidencias] = useState(incidenciasProp); // Estado local de incidencias
+    const [incidenciaPDF, setIncidenciaPDF] = useState(null);
+    const [incidenciaChat, setIncidenciaChat] = useState(null);
+    const [incidenciaMateriales, setIncidenciaMateriales] = useState(null);
+    const [incidencias, setIncidencias] = useState(incidenciasProp);
     const [loading, setLoading] = useState(true);
 
-    // Sincroniza las props con el estado local
     useEffect(() => {
         setIncidencias(incidenciasProp);
     }, [incidenciasProp]);
 
-    // Simula la carga de datos al montar el componente
     useEffect(() => {
         const timeout = setTimeout(() => {
             setLoading(false);
@@ -26,13 +29,13 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
         return () => clearTimeout(timeout);
     }, []);
 
-    // Filtrado de incidencias
     const incidenciasFiltradas = useMemo(() => {
         return incidencias.filter((incidencia) => {
             const searchLower = busqueda.toLowerCase();
             const usuario = incidencia.usuario || {};
             const responsable = incidencia.responsable || {};
             return (
+                incidencia.id.toLowerCase().includes(searchLower) ||
                 incidencia.asunto.toLowerCase().includes(searchLower) ||
                 incidencia.fecha_inicio.toLowerCase().includes(searchLower) ||
                 incidencia.estado_solicitud.toLowerCase().includes(searchLower) ||
@@ -47,7 +50,6 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
         });
     }, [busqueda, incidencias]);
 
-    // Función para eliminar incidencia
     const handleEliminar = async (id) => {
         const result = await Swal.fire({
             title: "¿Estás seguro?",
@@ -67,11 +69,8 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
 
                 Swal.fire("Eliminado", "La incidencia ha sido eliminada.", "success");
 
-                // Actualiza el estado local para reflejar los cambios
                 const nuevasIncidencias = incidencias.filter((incidencia) => incidencia.id !== id);
                 setIncidencias(nuevasIncidencias);
-
-                // Si es necesario, informa al padre sobre los cambios
                 setIsCambios(!isCambios);
             } catch (error) {
                 console.error("Error eliminando incidencia:", error);
@@ -79,6 +78,22 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
             }
         }
     };
+
+    const closeModal = () => {
+        setIncidenciaEditar(null);
+        setIncidenciaDetalle(null);
+        setIncidenciaPDF(null);
+        setIncidenciaChat(null);
+        setIncidenciaMateriales(null);
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") closeModal();
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
     return (
         <div className="p-4">
@@ -104,7 +119,7 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
                         <p className="text-gray-600 text-lg">Cargando incidencias...</p>
                     </div>
                 </div>
-            ) : incidenciasFiltradas.length === 0 && loading ? (
+            ) : incidenciasFiltradas.length === 0 ? (
                 <div className="text-center text-gray-600 text-lg mt-8">
                     No se encontraron incidencias.
                 </div>
@@ -113,40 +128,69 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
                     <thead>
                         <tr className="bg-gray-100">
                             <th className="border border-gray-300 px-4 py-2 text-left">Asunto</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Estado</th>
+                            <th className="border border-gray-300 px-4 py-2 text-left">Estado de solicitud </th>
+                            <th className="border border-gray-300 px-4 py-2 text-left">Estado de reparación </th>
                             <th className="border border-gray-300 px-4 py-2 text-left">Fecha Inicio</th>
                             <th className="border border-gray-300 px-4 py-2 text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {incidenciasFiltradas.map((incidencia) => (
-                            <tr
-                                key={incidencia.id}
-                                className="hover:bg-gray-50 cursor-pointer"
-                                onClick={() => setIncidenciaDetalle(incidencia)}
-                            >
+                            <tr key={incidencia.id} className="hover:bg-gray-50">
                                 <td className="border border-gray-300 px-4 py-2">{incidencia.asunto}</td>
                                 <td className="border border-gray-300 px-4 py-2">{incidencia.estado_solicitud}</td>
+                                <td className="border border-gray-300 px-4 py-2">{incidencia.estado_reparacion}</td>
                                 <td className="border border-gray-300 px-4 py-2">{incidencia.fecha_inicio}</td>
                                 <td className="border border-gray-300 px-4 py-2 text-center flex justify-center space-x-2">
-                                    <button
-                                        className="text-blue-500 hover:text-blue-700"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIncidenciaEditar(incidencia);
-                                        }}
-                                    >
-                                        <FaEdit />
-                                    </button>
-                                    <button
-                                        className="text-red-500 hover:text-red-700"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleEliminar(incidencia.id);
-                                        }}
-                                    >
-                                        <FaTrash />
-                                    </button>
+                                    {["Administrador", "Archivista", "Operario", "Carrera Universitaria"].includes(userData.permiso) && (
+                                        incidencia.estado_solicitud !== 'Documento Tramitado'
+                                            || userData.permiso === 'Administrador'
+                                            || userData.permiso === 'Archivista'
+                                            || userData.permiso === 'Operario' ?
+                                            <button
+                                                className="text-blue-500 hover:text-blue-700"
+                                                onClick={() => setIncidenciaEditar(incidencia)}
+                                            >
+                                                <FaEdit />
+                                            </button>
+                                            :
+                                            ''
+                                    )}
+                                    {["Administrador", "Carrera Universitaria"].includes(userData.permiso) && (
+                                        incidencia.estado_solicitud !== 'Documento Tramitado' ?
+                                            <button
+                                                className="text-red-500 hover:text-red-700"
+                                                onClick={() => handleEliminar(incidencia.id)}
+                                            >
+                                                <FaTrash />
+                                            </button>
+                                            :
+                                            ''
+                                    )}
+                                    {["Administrador", "Archivista", "Operario", "Carrera Universitaria"].includes(userData.permiso) && (
+                                        <button
+                                            className="text-red-600 hover:text-red-700"
+                                            onClick={() => setIncidenciaPDF(incidencia)}
+                                        >
+                                            <FaRegFilePdf />
+                                        </button>
+                                    )}
+                                    {["Administrador", "Archivista", "Operario", "Carrera Universitaria"].includes(userData.permiso) && (
+                                        <button
+                                            className="text-yellow-500 hover:text-yellow-700"
+                                            onClick={() => setIncidenciaChat(incidencia)}
+                                        >
+                                            <FaCommentDots />
+                                        </button>
+                                    )}
+                                    {["Administrador", "Archivista"].includes(userData.permiso) && (
+                                        <button
+                                            className="text-yellow-600 hover:text-yellow-800"
+                                            onClick={() => setIncidenciaMateriales(incidencia)}
+                                        >
+                                            <FaHammer />
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
@@ -156,32 +200,60 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
 
             {/* Modales */}
             {incidenciaEditar && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white w-[90%] max-w-4xl rounded-lg shadow-lg p-6 relative">
-                        <button
-                            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-                            onClick={() => setIncidenciaEditar(null)}
-                        >
-                            ✕
-                        </button>
-                        <EditarIncidencia incidencia={incidenciaEditar} />
-                    </div>
-                </div>
+                <Modal onClose={closeModal}>
+                    <EditarIncidencia incidencia={incidenciaEditar} userData={userData} isCambios={isCambios} setIsCambios={setIsCambios} closeModal={closeModal} />
+                </Modal>
             )}
 
-            {incidenciaDetalle && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white w-[90%] max-w-4xl rounded-lg shadow-lg p-6 relative">
-                        <button
-                            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-                            onClick={() => setIncidenciaDetalle(null)}
-                        >
-                            ✕
-                        </button>
-                        <DetalleIncidencia incidencia={incidenciaDetalle} />
-                    </div>
-                </div>
+            {incidenciaPDF && (
+                <Modal onClose={closeModal}>
+                    <PDF incidencia={incidenciaPDF} />
+                </Modal>
+            )}
+            {incidenciaChat && (
+                <Modal onClose={closeModal}>
+                    <Chat incidencia={incidenciaChat} />
+                </Modal>
+            )}
+            {incidenciaMateriales && (
+                <Modal onClose={closeModal}>
+                    <Materiales incidencia={incidenciaMateriales} userData={userData} isCambios={isCambios} setIsCambios={setIsCambios} closeModal={closeModal} />
+                </Modal>
             )}
         </div>
+    );
+}
+
+function Modal({ children, onClose }) {
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div
+                className="bg-white w-full max-w-screen-lg rounded-lg shadow-lg p-6 relative overflow-y-auto"
+                style={{
+                    maxHeight: "75vh", // Altura máxima para pantallas grandes
+                    height: "85vh",    // Altura para móviles
+                    overflowX: "hidden", // Deshabilita scroll horizontal
+                    scrollbarWidth: "none", // Oculta el scroll (Firefox)
+                }}
+            >
+                <style jsx>{`
+            /* Ocultar scroll en navegadores WebKit */
+            div::-webkit-scrollbar {
+                display: none;
+            }
+        `}</style>
+                {/* Botón de cierre */}
+                <button
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                    onClick={onClose}
+                >
+                    ✕
+                </button>
+
+                {/* Contenido dinámico */}
+                {children}
+            </div>
+        </div>
+
     );
 }
