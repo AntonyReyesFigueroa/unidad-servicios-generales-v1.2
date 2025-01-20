@@ -143,7 +143,7 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
                                 <td className="border border-gray-300 px-4 py-2">{incidencia.fecha_inicio}</td>
                                 <td className="border border-gray-300 px-4 py-2 text-center flex justify-center space-x-2">
                                     {["Administrador", "Archivista", "Operario", "Carrera Universitaria"].includes(userData.permiso) && (
-                                        incidencia.estado_solicitud !== 'Documento Tramitado'
+                                        incidencia.estado_solicitud === 'Documento pendiente'
                                             || userData.permiso === 'Administrador'
                                             || userData.permiso === 'Archivista'
                                             || userData.permiso === 'Operario' ?
@@ -157,7 +157,7 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
                                             ''
                                     )}
                                     {["Administrador", "Carrera Universitaria"].includes(userData.permiso) && (
-                                        incidencia.estado_solicitud !== 'Documento Tramitado' ?
+                                        incidencia.estado_solicitud === 'Documento pendiente' ?
                                             <button
                                                 className="text-red-500 hover:text-red-700"
                                                 onClick={() => handleEliminar(incidencia.id)}

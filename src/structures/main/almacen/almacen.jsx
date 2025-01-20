@@ -133,6 +133,12 @@ export default function Inventario() {
   const filteredProductos = productos.filter(
     (producto) =>
       producto.nombre?.toLowerCase().includes(search.toLowerCase()) &&
+      (!categoriaFilter || producto.categoria === categoriaFilter) ||
+      producto.categoria?.toLowerCase().includes(search.toLowerCase()) &&
+      (!categoriaFilter || producto.categoria === categoriaFilter) ||
+      producto.categoria?.toLowerCase().includes(search.toLowerCase()) &&
+      (!categoriaFilter || producto.categoria === categoriaFilter) ||
+      producto.orden_pedido?.toLowerCase().includes(search.toLowerCase()) &&
       (!categoriaFilter || producto.categoria === categoriaFilter)
   );
 
@@ -244,9 +250,7 @@ function ProductModal({ producto, onClose, onSave }) {
   const isValid = () =>
     nombre.length >= 3 &&
     categoria &&
-    stock > 0 &&
-    precio_unidad > 0 &&
-    orden_pedido;
+    stock > 0;
 
   const handleSave = () => {
     if (!isValid()) {
@@ -262,8 +266,8 @@ function ProductModal({ producto, onClose, onSave }) {
       nombre,
       categoria,
       stock: parseInt(stock, 10),
-      precio_unidad: parseFloat(precio_unidad),
-      orden_pedido,
+      precio_unidad: precio_unidad ? precio_unidad : 0,
+      orden_pedido: orden_pedido && orden_pedido !== 'Sin orden de pedido' ? orden_pedido : 'Sin orden de pedido',
     });
   };
 

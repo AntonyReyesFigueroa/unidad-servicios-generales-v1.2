@@ -115,9 +115,9 @@ export async function PATCH(request, { params }) {
         );
     }
 
-    const { asunto, mensaje, estado_reparacion, estado_solicitud } = updates;
+    const { asunto, mensaje, estado_reparacion, estado_solicitud, id_incidencia_material } = updates;
 
-    if (!asunto && !mensaje && estado_reparacion && estado_solicitud) {
+    if (!asunto && !mensaje && estado_reparacion && estado_solicitud && id_incidencia_material) {
         return NextResponse.json(
             { error: "No fields to update were provided" },
             { status: 400 }
@@ -152,6 +152,7 @@ export async function PATCH(request, { params }) {
         if (mensaje) incidencias[incidenciaIndex].mensaje = mensaje;
         if (estado_reparacion) incidencias[incidenciaIndex].estado_reparacion = estado_reparacion;
         if (estado_solicitud) incidencias[incidenciaIndex].estado_solicitud = estado_solicitud;
+        if (id_incidencia_material) incidencias[incidenciaIndex].id_incidencia_material = id_incidencia_material;
 
         // Enviar los datos actualizados a la API
         const putResponse = await fetch(baseUrl, {

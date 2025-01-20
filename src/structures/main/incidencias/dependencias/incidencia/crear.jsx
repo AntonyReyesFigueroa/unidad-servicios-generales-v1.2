@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import { FaPlus } from 'react-icons/fa';
 
 export default function CrearIncidencia({ isCambios, setIsCambios, userData }) {
     const [isOpen, setIsOpen] = useState(false); // Para controlar el modal
@@ -74,9 +75,10 @@ export default function CrearIncidencia({ isCambios, setIsCambios, userData }) {
         <div className="p-4">
             {/* Botón para abrir el modal */}
             <button
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none transition-all"
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none transition-all"
                 onClick={() => setIsOpen(true)}
             >
+                <FaPlus className="text-white" />
                 Nueva Incidencia
             </button>
 

@@ -259,10 +259,11 @@ function EditarIncidenciaAdmiArchi({ incidencia, userData, isCambios, setIsCambi
 
             {/* Información del Usuario */}
             <div>
-                <h3 className="text-md font-semibold mb-2">Información del Usuario</h3>
+                {/* <h3 className="text-md font-semibold mb-2">Información del Usuario</h3> */}
                 <div className="bg-gray-100 p-4 rounded-md shadow-sm">
+                    <p><strong>{incidencia.usuario.cargo}:</strong> {incidencia.usuario.nombre}</p>
+                    <p><strong>Pertenencia:</strong> {incidencia.usuario.pertenencia}</p>
                     <p><strong>Asunto:</strong> {incidencia.asunto}</p>
-                    <p><strong>Mensaje:</strong> {incidencia.mensaje}</p>
                     <p>
                         <strong>Estado de Solicitud:</strong>
                         {!isEditingSolicitud ? (
@@ -333,14 +334,17 @@ function EditarIncidenciaAdmiArchi({ incidencia, userData, isCambios, setIsCambi
                 {!isEditingResponsable ? (
                     <div className="bg-gray-100 p-4 rounded-md shadow-sm">
                         {responsableData ? (
-                            <>
-                                <p><strong>Nombre:</strong> {responsableData.nombre}</p>
-                                <p><strong>Email:</strong> {responsableData.email}</p>
-                                <p><strong>DNI:</strong> {responsableData.dni}</p>
-                                <p><strong>Teléfono:</strong> {responsableData.telefono}</p>
-                                <p><strong>Cargo:</strong> {responsableData.cargo}</p>
-                                <p><strong>Pertenencia:</strong> {responsableData.pertenencia}</p>
-                            </>
+                            responsableData.nombre !== undefined ?
+                                <>
+                                    <p><strong>Nombre:</strong> {responsableData.nombre}</p>
+                                    <p><strong>Email:</strong> {responsableData.email}</p>
+                                    <p><strong>DNI:</strong> {responsableData.dni}</p>
+                                    <p><strong>Teléfono:</strong> {responsableData.telefono}</p>
+                                    <p><strong>Cargo:</strong> {responsableData.cargo}</p>
+                                    <p><strong>Pertenencia:</strong> {responsableData.pertenencia}</p>
+                                </>
+                                :
+                                'Sin responsable'
                         ) : (
                             <p className="text-red-500">Sin responsable asignado.</p>
                         )}

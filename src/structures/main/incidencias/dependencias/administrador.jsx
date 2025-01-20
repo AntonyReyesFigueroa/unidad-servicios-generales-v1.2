@@ -32,10 +32,14 @@ export default function Administrador({ userData, url }) {
     }, [url, isCambios]); // Ejecutar el efecto cuando cambie la URL
 
     return (
-        <div>
-            <h1>Incidencias - {userData.pertenencia} </h1> {/* este es el titulo */}
+        <div className="p-6 bg-gray-50 rounded-lg shadow-md space-y-2">
+            <h1 className="text-2xl font-bold text-gray-800 text-center">
+                Incidencias - {userData.pertenencia}
+            </h1>
             <CrearIncidencia setIsCambios={setIsCambios} isCambios={isCambios} userData={userData} />
-            <h2>Tabla de incidencias</h2>
+            <h2 className="text-xl font-semibold text-gray-700">
+                Tabla de incidencias
+            </h2>
             <TablaIncidencias setIsCambios={setIsCambios} isCambios={isCambios} userData={userData} incidencias={incidencias} />
         </div>
     );

@@ -389,6 +389,7 @@ const Empleados = () => {
                 <option value="Electricista">Electricista</option>
                 <option value="Soldador">Soldador</option>
                 <option value="Carpintero">Carpintero</option>
+                <option value="Cerrajero">Cerrajero</option>
                 <option value="Técnico en mecánica fina">Técnico en mecánica fina</option>
                 <option value="Albañil">Albañil</option>
               </select>
