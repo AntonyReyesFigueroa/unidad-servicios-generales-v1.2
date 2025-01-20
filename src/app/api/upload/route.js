@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 
 // Configuración de Cloudinary
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_NAME, 
-  api_key: process.env.CLOUDINARY_KEY, 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
   api_secret: process.env.CLOUDINARY_SECRET
 });
 
@@ -40,7 +40,7 @@ export async function POST(request) {
     });
 
     console.log(response);
-    
+
 
     return NextResponse.json({
       message: "Archivo subido exitosamente",

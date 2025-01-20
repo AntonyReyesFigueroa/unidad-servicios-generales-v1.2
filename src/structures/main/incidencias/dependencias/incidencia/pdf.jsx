@@ -1,17 +1,23 @@
-'use client'
+'use client';
 
-import React from "react";
-import {
-    PDFViewer,
-    Document,
-    Page,
-    Text,
-    View,
-    StyleSheet,
-    Image,
-} from "@react-pdf/renderer";
+import React, { useEffect, useState } from 'react';
 
 export default function PDF({ incidencia }) {
+    const [PDFRenderer, setPDFRenderer] = useState(null);
+
+    useEffect(() => {
+        // Realizamos una importación dinámica solo cuando sea necesario
+        import('@react-pdf/renderer').then((module) => {
+            setPDFRenderer(module);
+        });
+    }, []);
+
+    if (!PDFRenderer) {
+        return <div>Loading...</div>; // Mostrar algo mientras cargan las dependencias
+    }
+
+    const { PDFViewer, Document, Page, Text, View, StyleSheet, Image } = PDFRenderer;
+
     const styles = StyleSheet.create({
         page: {
             padding: 40,
@@ -88,8 +94,6 @@ export default function PDF({ incidencia }) {
                             Atentamente, {incidencia.usuario.cargo} {incidencia.usuario.nombre}
                         </Text>
                     </View>
-
-
                 </Page>
             </Document>
         </PDFViewer>
