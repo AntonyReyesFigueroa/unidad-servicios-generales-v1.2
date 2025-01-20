@@ -58,8 +58,8 @@ export default function HeaderMovil() {
           <div className="absolute top-16 left-0 w-full bg-white shadow-lg z-50">
             <nav className="flex flex-col items-start p-4">
               <>
-                <Link href="/incidencias/admi" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
-                  Incidencias Admi
+                <Link href="/dependencias" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
+                  Dependencias
                 </Link>
                 <Link href="/almacen" className="block w-full py-2 px-4 text-gray-800 hover:bg-gray-100">
                   Almacén

@@ -37,7 +37,6 @@ export async function GET(request, { params }) {
 }
 
 
-
 export async function POST(request, { params }) {
     try {
         const { id } = params; // ID de incidencia que recibes como parámetro
@@ -62,7 +61,41 @@ export async function POST(request, { params }) {
         // Actualizar el arreglo `incidencia_material`
         incidenciaMaterialArray.push(newMaterial);
 
-        // Hacer un PUT a la API con los datos actualizados
+        // GET para obtener el inventario actual
+        const inventoryResponse = await fetch('https://66ca95fa59f4350f064f7413.mockapi.io/material/1');
+        if (!inventoryResponse.ok) {
+            throw new Error('Error al obtener el inventario de la API');
+        }
+
+        const inventoryData = await inventoryResponse.json();
+        const inventory = inventoryData.material;
+
+        // Ajustar el inventario según los productos en el nuevo pedido
+        const updatedInventory = inventory.map(item => {
+            const newProduct = body.productos.find(p => p.id === item.id);
+
+            if (newProduct) {
+                // Reducir el `stock` del producto por la cantidad pedida
+                return { ...item, stock: item.stock - newProduct.cantidad };
+            }
+
+            return item; // Dejar los demás productos sin cambios
+        });
+
+        // PUT para actualizar el inventario
+        const inventoryPutResponse = await fetch('https://66ca95fa59f4350f064f7413.mockapi.io/material/1', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ material: updatedInventory }),
+        });
+
+        if (!inventoryPutResponse.ok) {
+            throw new Error('Error al actualizar el inventario en la API');
+        }
+
+        // PUT para actualizar el arreglo de incidencia_material
         const putResponse = await fetch('https://66ca95fa59f4350f064f7413.mockapi.io/material/2', {
             method: 'PUT',
             headers: {
@@ -75,13 +108,14 @@ export async function POST(request, { params }) {
             throw new Error('Error al guardar datos en la API');
         }
 
-        // Retornar los datos guardados
+        // Retornar el nuevo material añadido
         return new Response(JSON.stringify(newMaterial), { status: 200 });
     } catch (error) {
         console.error('Error:', error);
         return new Response(JSON.stringify({ message: error.message }), { status: 500 });
     }
 }
+
 
 
 

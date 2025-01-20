@@ -50,7 +50,10 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
         });
     }, [busqueda, incidencias]);
 
-    const handleEliminar = async (id) => {
+    const handleEliminar = async (inciden) => {
+
+        // console.log(inciden);
+
         const result = await Swal.fire({
             title: "¿Estás seguro?",
             text: "No podrás deshacer esta acción.",
@@ -62,14 +65,29 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
             cancelButtonText: "Cancelar",
         });
 
+
+
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`/api/incidencia/${id}`, { method: "DELETE" });
+                const response = await fetch(`/api/incidencia/${inciden.id}`, { method: "DELETE" });
                 if (!response.ok) throw new Error("Error al eliminar la incidencia.");
+
+                if (inciden.id_incidencia_material) {
+
+                    const responseMaterial = await fetch(`/api/materiales//${inciden.id_incidencia_material}`, { method: "DELETE" });
+                    if (!responseMaterial.ok) throw new Error("Error al eliminar la material de incidencia.");
+                    // console.log("se va eliminar :", inciden.id_incidencia_material);
+
+                }
+
+
+
+
 
                 Swal.fire("Eliminado", "La incidencia ha sido eliminada.", "success");
 
-                const nuevasIncidencias = incidencias.filter((incidencia) => incidencia.id !== id);
+                const nuevasIncidencias = incidencias.filter((incidencia) => incidencia.id !== inciden.id);
+
                 setIncidencias(nuevasIncidencias);
                 setIsCambios(!isCambios);
             } catch (error) {
@@ -160,7 +178,11 @@ export default function TablaIncidencias({ isCambios, setIsCambios, userData, in
                                         incidencia.estado_solicitud === 'Documento pendiente' ?
                                             <button
                                                 className="text-red-500 hover:text-red-700"
-                                                onClick={() => handleEliminar(incidencia.id)}
+                                                onClick={() => {
+
+                                                    handleEliminar(incidencia)
+                                                }
+                                                }
                                             >
                                                 <FaTrash />
                                             </button>
