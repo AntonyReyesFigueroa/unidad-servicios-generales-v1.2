@@ -19,7 +19,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <UserProvider>
         <body className={inter.className}>
-      
+
           {children}
           <Footer />
         </body>
